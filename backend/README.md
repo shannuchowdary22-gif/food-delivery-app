@@ -10,7 +10,7 @@ Spring Boot 3.4.5 REST API using Java 17, Spring Web, Spring Data JPA, Spring Se
 
 ## Configuration
 
-Copy `.env.example` to your environment and provide `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, and `CORS_ORIGIN`. The default development setting exposes the generated OTP in the response; set `EXPOSE_OTP=false` when an SMS provider is connected.
+Copy `.env.example` to your environment and provide `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, and `FRONTEND_URL`. `JWT_SECRET` must be at least 32 bytes long. The default development setting exposes the generated OTP in the response; set `EXPOSE_OTP=false` when an SMS provider is connected. `DDL_AUTO=update` is intended for local development; set `DDL_AUTO=validate` in production so startup cannot alter the existing schema.
 
 ## Run
 
