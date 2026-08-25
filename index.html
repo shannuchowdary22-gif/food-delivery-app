@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomiggy - Food Delivery</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Leaflet CSS for Live Real Map Tracking -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+:root {
+--primary: #ff385c;
+--primary-hover: #e00b41;
+--bg-main: #f1f5f9;
+--bg-card: #ffffff;
+--text-main: #0f172a;
+--text-muted: #64748b;
+--border: #e2e8f0;
+--success: #10b981;
+--warning: #f59e0b;
+--pink: #8b5cf6;
+--cyan: #0284c7;
+--shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+--radius: 14px;
+--transition: all 0.3s ease;
+}
+
+body.dark-mode {
+--bg-main: #0b0f19;
+--bg-card: #1e293b;
+--text-main: #f8fafc;
+--text-muted: #94a3b8;
+--border: #334155;
+--shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+body { background-color: var(--bg-main); color: var(--text-main); transition: var(--transition); padding-bottom: 80px; }
+
+.hidden { display: none !important; }
+.active { display: block; }
+.w-100 { width: 100%; }
+.mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; } .mt-4 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 0.5rem; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; } .ml-auto { margin-left: auto; }
+.p-3 { padding: 1.5rem; }
+.text-sm { font-size: 0.85rem; } .text-lg { font-size: 1.25rem; }
+.text-primary { color: var(--primary); } .text-success { color: var(--success); }
+.text-warning { color: var(--warning); } .text-pink { color: var(--pink); }
+.font-medium { font-weight: 500; } .font-bold { font-weight: 700; }
+.d-flex { display: flex; align-items: center; } .justify-between { justify-content: space-between; }
+.gap-1 { gap: 0.5rem; } .gap-2 { gap: 1rem; } .text-center { text-align: center; }
+
+input, select, textarea {
+width: 100%; padding: 12px; border: 1.5px solid var(--border);
+border-radius: 10px; background: var(--bg-card); color: var(--text-main); outline: none; margin-bottom: 8px; font-family: inherit;
+transition: var(--transition);
+}
+input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.15); }
+
+.btn {
+padding: 12px 20px; border-radius: 10px; border: none;
+font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-block; text-align: center;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(255, 56, 92, 0.3); }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-main); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-text { background: transparent; color: var(--primary); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 16px 5%; background: var(--bg-card); border-bottom: 1.5px solid var(--border); position: sticky; top: 0; z-index: 100;
+box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.logo { font-size: 1.55rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; cursor: pointer; letter-spacing: -0.5px; }
+.location-selector { cursor: pointer; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; max-width: 280px; }
+.location-selector span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.header-actions button { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); position: relative; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 10px; transition: var(--transition); }
+.header-actions button:hover { color: var(--primary); background: var(--bg-main); }
+.badge { position: absolute; top: -4px; right: -4px; background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 50%; font-weight: 700; }
+
+#app-container { padding: 22px 5%; max-width: 1200px; margin: auto; transition: var(--transition); }
+
+#screen-login { display: flex; justify-content: center; align-items: center; height: 80vh; }
+.login-card { background: var(--bg-card); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+.timer { color: var(--primary); font-weight: bold; margin-top: 10px; }
+
+.scroll-x { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+
+
+.feature-container {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 16px;
+width: 100%;
+margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+.feature-container {
+grid-template-columns: repeat(2, 1fr);
+gap: 12px;
+}
+}
+
+.feature-card { 
+background: var(--bg-card); 
+padding: 30px 20px; 
+border-radius: var(--radius); 
+width: 100%;
+display: flex; 
+flex-direction: column; 
+align-items: center; 
+justify-content: center;
+gap: 14px; 
+box-shadow: var(--shadow); 
+font-weight: 700; 
+font-size: 1.2rem; 
+cursor: pointer; 
+border: 2px solid var(--border); 
+transition: var(--transition);
+text-align: center;
+}
+.feature-card i {
+font-size: 2.8rem; 
+}
+.feature-card:hover {
+transform: translateY(-5px);
+border-color: var(--primary);
+box-shadow: 0 10px 20px rgba(255, 56, 92, 0.12);
+}
+.feature-card.active { border-color: var(--warning); background: rgba(245, 158, 11, 0.08); }
+body.dark-mode .feature-card.active { background: rgba(245, 158, 11, 0.15); }
+
+.search-bar { position: relative; }
+.search-bar i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+
+.filter-bar { align-items: center; }
+.filter-pill { padding: 9px 18px; border-radius: 24px; border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; white-space: nowrap; transition: var(--transition); font-weight: 500; font-size: 0.9rem; }
+.filter-pill:hover { border-color: var(--primary); color: var(--primary); }
+.filter-pill.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255, 56, 92, 0.25); }
+
+.advanced-filter-controls {
+display: flex;
+gap: 10px;
+align-items: center;
+flex-wrap: wrap;
+margin-top: 12px;
+background: var(--bg-card);
+padding: 12px 16px;
+border-radius: var(--radius);
+border: 1px solid var(--border);
+}
+.sort-select {
+width: auto;
+min-width: 190px;
+padding: 8px 12px;
+margin-bottom: 0;
+font-size: 0.88rem;
+}
+
+.restaurant-card { min-width: 260px; max-width: 260px; background: var(--bg-card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: var(--transition); border: 2px solid var(--border); position: relative; }
+.restaurant-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09); }
+.restaurant-card.active { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 0 14px rgba(255, 56, 92, 0.35); }
+.res-img-container { height: 140px; width: 100%; position: relative; }
+.res-img-container img { width: 100%; height: 100%; object-fit: cover; }
+.res-offer { position: absolute; bottom: 8px; left: 8px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; font-size: 0.75rem; font-weight: 600; padding: 4px 9px; border-radius: 6px; backdrop-filter: blur(4px); }
+.res-selected-badge { position: absolute; top: 8px; right: 8px; background: var(--primary); color: white; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.res-content { padding: 14px; }
+.res-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-cuisine { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.switch { position: relative; display: inline-block; width: 42px; height: 22px; margin-right: 8px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--success); }
+input:checked + .slider:before { transform: translateX(20px); }
+.slider.round { border-radius: 22px; }
+.slider.round:before { border-radius: 50%; }
+
+.food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+.food-card { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: var(--transition); position: relative; display: flex; flex-direction: column; border: 1px solid var(--border); }
+.food-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08); border-color: #cbd5e1; }
+.food-img-container { height: 185px; width: 100%; position: relative; }
+.food-img-container img { width: 100%; height: 100%; object-fit: cover; }
+.card-badge { position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.85); color: white; padding: 4px 9px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; backdrop-filter: blur(4px); }
+.fav-btn { position: absolute; top: 10px; right: 10px; background: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: var(--text-muted); box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+.card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+.food-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+.food-restaurant-origin { font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-bottom: 8px; display: block; cursor: pointer; }
+.veg-indicator { height: 13px; width: 13px; border: 1.5px solid var(--success); display: inline-flex; justify-content: center; align-items: center; border-radius: 3px; }
+.veg-indicator::after { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+.non-veg-indicator { border-color: #ef4444; } .non-veg-indicator::after { background: #ef4444; border-radius: 0; }
+.food-meta { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 10px; }
+.food-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; flex: 1; line-height: 1.4; }
+.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.price { font-weight: 800; font-size: 1.15rem; color: var(--text-main); }
+.add-btn { background: white; color: var(--primary); border: 1.5px solid var(--primary); padding: 7px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.add-btn:hover { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 56, 92, 0.25); }
+
+
+.card-qty-control {
+display: inline-flex;
+align-items: center;
+gap: 12px;
+background: var(--primary);
+color: white;
+padding: 6px 14px;
+border-radius: 8px;
+box-shadow: 0 4px 10px rgba(255, 56, 92, 0.25);
+}
+.card-qty-control button {
+background: none;
+border: none;
+color: white;
+font-size: 1.15rem;
+font-weight: bold;
+cursor: pointer;
+line-height: 1;
+padding: 0 4px;
+}
+.card-qty-control span {
+font-size: 0.95rem;
+font-weight: 700;
+min-width: 14px;
+text-align: center;
+}
+
+.cart-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 16px; border-radius: var(--radius); margin-bottom: 10px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.qty-control { display: flex; align-items: center; gap: 10px; background: var(--bg-main); padding: 6px 12px; border-radius: 8px; }
+.qty-control button { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--primary); font-weight: bold; }
+
+.coupon-tags { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.coupon-tag { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1.5px dashed var(--success); padding: 6px 12px; border-radius: 8px; font-size: 0.82rem; cursor: pointer; font-weight: 700; transition: var(--transition); }
+.coupon-tag:hover { background: rgba(16, 185, 129, 0.2); }
+body.dark-mode .coupon-tag { background: rgba(16, 185, 129, 0.15); }
+
+.tracking-card { background: var(--bg-card); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); max-width: 720px; margin: auto; border: 1px solid var(--border); }
+.stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 30px;}
+.stepper::before { content: ''; position: absolute; top: 20px; left: 0; width: 100%; height: 3px; background: var(--border); z-index: 1; }
+.step { text-align: center; position: relative; z-index: 2; flex: 1; }
+.step-icon { width: 42px; height: 42px; background: var(--bg-main); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 8px; border: 2px solid var(--border); color: var(--text-muted); transition: var(--transition); }
+.step.active .step-icon { background: var(--primary); border-color: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 4px 10px rgba(255, 56, 92, 0.35); }
+.step p { font-size: 0.78rem; font-weight: 600; }
+.delivery-agent { display: flex; align-items: center; gap: 15px; background: var(--bg-main); padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); }
+.delivery-agent img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+
+#live-tracking-map {
+height: 320px;
+width: 100%;
+border-radius: var(--radius);
+border: 1px solid var(--border);
+z-index: 10;
+}
+
+.map-live-badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+background: rgba(16, 185, 129, 0.12);
+color: var(--success);
+padding: 4px 12px;
+border-radius: 20px;
+font-size: 0.8rem;
+font-weight: 700;
+}
+
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: var(--bg-card); padding: 25px; border-radius: var(--radius); width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
+.modal-header button { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); }
+
+.notification-item {
+background: var(--bg-main);
+padding: 14px 16px;
+border-radius: 10px;
+margin-bottom: 10px;
+border-left: 4px solid var(--primary);
+display: flex;
+gap: 12px;
+align-items: flex-start;
+}
+.notification-item.unread {
+border-left-color: var(--success);
+background: rgba(16, 185, 129, 0.08);
+}
+.notification-icon {
+font-size: 1.2rem;
+margin-top: 2px;
+}
+
+/* Floating AI Chatbot Styles */
+.ai-fab {
+position: fixed;
+bottom: 88px;
+right: 22px;
+background: linear-gradient(135deg, var(--primary), #8b5cf6);
+color: white;
+width: 58px;
+height: 58px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.5rem;
+box-shadow: 0 8px 24px rgba(255, 56, 92, 0.35);
+cursor: pointer;
+z-index: 999;
+border: 2px solid white;
+transition: var(--transition);
+}
+.ai-fab:hover {
+transform: scale(1.1) rotate(5deg);
+}
+.ai-fab-pulse {
+position: absolute;
+width: 100%;
+height: 100%;
+border-radius: 50%;
+background: rgba(255, 56, 92, 0.4);
+animation: pulse-ring 2s infinite;
+z-index: -1;
+}
+@keyframes pulse-ring {
+0% { transform: scale(0.95); opacity: 0.8; }
+70% { transform: scale(1.4); opacity: 0; }
+100% { transform: scale(1.4); opacity: 0; }
+}
+
+.ai-chat-window {
+position: fixed;
+bottom: 95px;
+right: 20px;
+width: 380px;
+max-width: 92vw;
+height: 540px;
+max-height: 80vh;
+background: var(--bg-card);
+border-radius: 18px;
+box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25);
+border: 1px solid var(--border);
+display: flex;
+flex-direction: column;
+z-index: 1000;
+overflow: hidden;
+transition: var(--transition);
+}
+.ai-chat-header {
+background: linear-gradient(135deg, var(--primary), #8b5cf6);
+color: white;
+padding: 15px 18px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.ai-chat-body {
+flex: 1;
+padding: 16px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 12px;
+background: var(--bg-main);
+}
+.ai-chat-msg {
+max-width: 88%;
+padding: 10px 14px;
+border-radius: 14px;
+font-size: 0.86rem;
+line-height: 1.45;
+}
+.ai-chat-msg.bot {
+background: var(--bg-card);
+color: var(--text-main);
+border: 1px solid var(--border);
+align-self: flex-start;
+border-bottom-left-radius: 4px;
+box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.ai-chat-msg.user {
+background: var(--primary);
+color: white;
+align-self: flex-end;
+border-bottom-right-radius: 4px;
+}
+.ai-quick-chips {
+display: flex;
+gap: 6px;
+overflow-x: auto;
+padding: 8px 12px;
+background: var(--bg-card);
+border-top: 1px solid var(--border);
+scrollbar-width: none;
+}
+.ai-quick-chips::-webkit-scrollbar { display: none; }
+.ai-chip {
+background: var(--bg-main);
+color: var(--text-main);
+border: 1px solid var(--border);
+border-radius: 16px;
+padding: 5px 11px;
+font-size: 0.75rem;
+font-weight: 600;
+white-space: nowrap;
+cursor: pointer;
+transition: var(--transition);
+}
+.ai-chip:hover {
+background: var(--primary);
+color: white;
+border-color: var(--primary);
+}
+.ai-chat-footer {
+padding: 10px 14px;
+background: var(--bg-card);
+border-top: 1px solid var(--border);
+display: flex;
+gap: 8px;
+align-items: center;
+}
+.ai-chat-footer input {
+margin-bottom: 0;
+padding: 10px 14px;
+font-size: 0.88rem;
+border-radius: 20px;
+}
+.ai-chat-footer button {
+border-radius: 50%;
+width: 40px;
+height: 40px;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0;
+flex-shrink: 0;
+}
+.ai-dish-card {
+background: var(--bg-card);
+border: 1px solid var(--border);
+border-radius: 10px;
+padding: 8px 10px;
+margin-top: 6px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.ai-dish-card img {
+width: 44px;
+height: 44px;
+border-radius: 8px;
+object-fit: cover;
+}
+
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 12px 24px; border-radius: 30px; z-index: 2000; font-size: 0.9rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); font-weight: 500; }
+
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1.5px solid var(--border); z-index: 100; box-shadow: 0 -4px 12px rgba(0,0,0,0.03); }
+.bottom-nav a { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 0.75rem; gap: 4px; font-weight: 500; }
+.bottom-nav a.active { color: var(--primary); font-weight: 700; }
+.bottom-nav i { font-size: 1.25rem; }
+.cart-nav-icon { position: relative; }
+</style>
+</head>
+<body>
+
+<header id="main-header" class="hidden">
+<div class="logo" onclick="app.showAllFood()">
+<i class="fa-solid fa-utensils text-primary"></i> <span>Zomiggy</span>
+</div>
+<div class="location-selector" onclick="app.showModal('modal-location')">
+<i class="fa-solid fa-location-dot text-primary"></i>
+<span id="header-location">Fetching location...</span>
+<i class="fa-solid fa-chevron-down"></i>
+</div>
+<button class="btn btn-text" onclick="app.showModal('modal-location')" style="padding: 4px 8px; margin-left: 4px;">Change</button>
+
+<div class="header-actions">
+<!-- Filter option in upper section beside cart -->
+<button onclick="app.showModal('modal-filters')" title="Filters & Sort">
+<i class="fa-solid fa-sliders"></i>
+</button>
+
+<!-- Cart Action with badge -->
+<button onclick="app.navigate('cart')" title="My Cart">
+<i class="fa-solid fa-cart-shopping"></i>
+<span class="badge" id="header-cart-badge">0</span>
+</button>
+
+<!-- Notifications Bell -->
+<button onclick="app.showNotifications()" title="Notifications">
+<i class="fa-regular fa-bell"></i>
+<span class="badge" id="notification-badge">3</span>
+</button>
+
+<!-- Profile Icon -->
+<button onclick="app.navigate('profile')" title="My Profile"><i class="fa-regular fa-user"></i></button>
+</div>
+</header>
+
+<main id="app-container">
+
+<section id="screen-login" class="screen active">
+<div class="login-card">
+<div class="logo justify-between text-center mb-2" style="display: inline-flex;">
+<i class="fa-solid fa-utensils text-primary"></i> <span>Zomiggy</span>
+</div>
+<h2>Welcome Back</h2>
+<p class="text-sm text-muted">Login to order delicious food directly to your doorstep</p>
+<div id="login-step-1" class="mt-3">
+<input type="tel" id="mobile-input" placeholder="Enter Mobile Number (10 digits)" maxlength="10">
+<button class="btn btn-primary w-100 mt-2" onclick="app.requestOTP()">Get OTP</button>
+</div>
+<div id="login-step-2" class="hidden mt-3">
+<p class="text-sm">OTP sent to <span id="display-mobile" class="font-bold"></span></p>
+<input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6" class="mt-1">
+<p class="timer" id="otp-timer">01:00</p>
+<button class="btn btn-primary w-100 mt-2" onclick="app.verifyOTP()">Verify & Login</button>
+<button class="btn btn-text w-100 text-sm mt-1" onclick="app.requestOTP()" id="resend-btn" disabled>Resend OTP</button>
+</div>
+</div>
+</section>
+
+<section id="screen-location" class="screen hidden">
+<div class="login-card">
+<i class="fa-solid fa-map-location-dot text-primary mb-2" style="font-size: 3rem;"></i>
+<h2>Select Delivery Location</h2>
+<p class="text-sm text-muted">Detect your precise live GPS location or enter your address manually.</p>
+<button class="btn btn-primary w-100 mt-3" onclick="app.useGPS()"><i class="fa-solid fa-crosshairs"></i> Use Current Live GPS Location</button>
+<div class="text-center mt-2 mb-2 text-sm text-muted font-bold">OR</div>
+<input type="text" id="location-manual-input" placeholder="Enter your address">
+<button class="btn btn-outline w-100 mt-2" onclick="app.setManualLocation()">Continue with Manual Address</button>
+</div>
+</section>
+
+<section id="screen-home" class="screen hidden">
+<!-- Responsive, Full-Width Edge-to-End Grid for Feature Cards -->
+<div class="feature-container">
+<div class="feature-card" id="btn-instant" onclick="app.toggleInstant()"><i class="fa-solid fa-bolt text-warning"></i><span>Instant</span></div>
+<div class="feature-card" onclick="app.showModal('modal-discounts')"><i class="fa-solid fa-tags text-success"></i><span>Discounts</span></div>
+<div class="feature-card" onclick="app.showModal('modal-giftbox')"><i class="fa-solid fa-gift text-pink"></i><span>Gift Box</span></div>
+<div class="feature-card" onclick="app.showModal('modal-split')"><i class="fa-solid fa-users text-primary"></i><span>Split Pay</span></div>
+</div>
+
+<div class="search-bar w-100 mt-3 mb-2" style="max-width: 100%; display: block;">
+<i class="fa-solid fa-search" style="left: 15px; top: 15px;"></i>
+<input type="text" id="main-search-input" placeholder="Search for restaurants, dishes, continental, burgers..." style="padding-left: 44px; width: 100%;">
+</div>
+
+<!-- Cuisine Categories Strip -->
+<div class="filter-bar scroll-x mt-2">
+<button class="filter-pill active">All Food</button>
+<div class="toggle-container" style="display:inline-flex; align-items:center; margin-left: 5px; margin-right: 15px;">
+<label class="switch" style="margin-right: 5px;">
+<input type="checkbox" id="veg-toggle">
+<span class="slider round"></span>
+</label>
+<span class="text-sm font-medium">Veg Only</span>
+</div>
+<button class="filter-pill">Pizza</button>
+<button class="filter-pill">Burger</button>
+<button class="filter-pill">Biryani</button>
+<button class="filter-pill">Sushi</button>
+<button class="filter-pill">Continental</button>
+<button class="filter-pill">Fast Food</button>
+<button class="filter-pill">Dessert</button>
+<button class="filter-pill">Chinese</button>
+<button class="filter-pill">Mexican</button>
+<button class="filter-pill">North Indian</button>
+<button class="filter-pill">Coastal</button>
+</div>
+
+<!-- Advanced Interactive Filters (Sort by price, rating, delivery speed) -->
+<div class="advanced-filter-controls">
+<span class="text-sm font-bold"><i class="fa-solid fa-sliders text-primary"></i> Filters & Sort:</span>
+<select id="sort-select" class="sort-select" onchange="app.handleSortChange(this.value)">
+<option value="default">Default (Recommended)</option>
+<option value="rating-high">Top Rated (4.5+ first)</option>
+<option value="price-low">Price: Low to High</option>
+<option value="price-high">Price: High to Low</option>
+<option value="time-fast">Fastest Delivery</option>
+</select>
+<button class="btn btn-outline btn-sm" style="padding: 6px 12px; font-size: 0.8rem;" onclick="app.showModal('modal-filters')"><i class="fa-solid fa-filter"></i> More Filters</button>
+<button class="btn btn-outline btn-sm" style="padding: 6px 12px; font-size: 0.8rem;" onclick="app.showAllFood()"><i class="fa-solid fa-rotate-left"></i> Reset All</button>
+</div>
+
+<div class="d-flex justify-between align-items-center mt-3">
+<h3>Top Restaurants <span class="text-sm text-muted font-medium">(Click any restaurant to view its full menu)</span></h3>
+<button class="btn btn-text text-sm hidden" id="clear-res-filter-btn" onclick="app.clearRestaurantFilter()">Show All Dishes</button>
+</div>
+
+<div class="scroll-x mt-2" id="restaurant-grid" style="gap: 15px; padding-bottom: 10px;">
+</div>
+
+<h3 class="mt-3" id="food-section-title">Popular Dishes</h3>
+<div class="food-grid mt-2" id="food-grid">
+</div>
+</section>
+
+<section id="screen-cart" class="screen hidden">
+<h2 class="mb-2">Your Cart</h2>
+<div id="cart-items-container"></div>
+
+<div class="checkout-panel mt-3">
+<p class="text-sm font-medium mb-2">Available Coupons:</p>
+<div class="coupon-tags">
+<span class="coupon-tag" onclick="app.setAndApplyCoupon('ZOMNEW')">ZOMNEW (₹75 OFF)</span>
+<span class="coupon-tag" onclick="app.setAndApplyCoupon('50OFF')">50OFF (Flat 50%)</span>
+<span class="coupon-tag" onclick="app.setAndApplyCoupon('PARTY150')">PARTY150 (₹150 OFF)</span>
+<span class="coupon-tag" onclick="app.setAndApplyCoupon('TASTY30')">TASTY30 (30% OFF)</span>
+<span class="coupon-tag" onclick="app.setAndApplyCoupon('FREEDEL')">FREEDEL (₹40 OFF)</span>
+</div>
+
+<div class="d-flex gap-1">
+<input type="text" id="coupon-input" placeholder="Coupon Code" style="margin-bottom:0;">
+<button class="btn btn-outline" onclick="app.applyCoupon()">Apply</button>
+<button class="btn btn-text text-sm hidden" id="btn-remove-coupon" onclick="app.removeCoupon()">Remove</button>
+</div>
+<div id="coupon-status-msg" class="text-sm mt-1"></div>
+
+<div class="payment-method mt-2">
+<label class="font-medium text-sm">Payment Method</label>
+<select id="payment-select" class="w-100 mt-1" onchange="app.renderPaymentFields()">
+<option value="upi">UPI</option>
+<option value="credit">Credit Card</option>
+<option value="debit">Debit Card</option>
+<option value="cod">Cash on Delivery</option>
+</select>
+</div>
+
+<div id="dynamic-payment-fields" class="mt-2 mb-2"></div>
+
+<div class="order-summary-box" style="background: var(--bg-card); padding: 18px; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 15px; box-shadow: var(--shadow);">
+<div class="d-flex justify-between text-sm mb-1">
+<span>Subtotal</span>
+<span id="cart-subtotal-price">₹0</span>
+</div>
+<div class="d-flex justify-between text-sm mb-1 text-success hidden" id="cart-discount-row">
+<span>Coupon Discount</span>
+<span id="cart-discount-price">-₹0</span>
+</div>
+<div class="d-flex justify-between font-bold text-lg mt-2 pt-2" style="border-top: 1px solid var(--border);">
+<span>Total to Pay</span>
+<span id="cart-total-price">₹0</span>
+</div>
+</div>
+
+<button class="btn btn-primary w-100 mt-3" onclick="app.showModal('modal-secure-pay')">Place Order</button>
+</div>
+</section>
+
+<!-- Screen Profile: Discount Coupons & Order History are below Address -->
+<section id="screen-profile" class="screen hidden">
+<h2 class="mb-2">Profile</h2>
+<div style="display: flex; flex-direction: column; gap: 20px; margin-top: 15px;">
+
+<!-- Top Details Box: Name, Mobile, Address & Actions -->
+<div style="background: var(--bg-card); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border);">
+<div class="d-flex justify-between align-items-center mb-3">
+<h3 class="text-primary" style="margin: 0;"><i class="fa-regular fa-id-card"></i> Personal Details</h3>
+<span class="text-warning font-bold"><i class="fa-solid fa-coins"></i> <span id="profile-coins">0</span> Coins</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+<div>
+<label class="font-medium text-sm text-primary">Name</label>
+<input type="text" id="profile-name" value="Foodie User" class="w-100 mt-1">
+</div>
+
+<div>
+<label class="font-medium text-sm text-primary">Mobile</label>
+<input type="tel" id="profile-mobile" value="1234567890" class="w-100 mt-1" disabled style="background-color: var(--bg-main);">
+</div>
+</div>
+
+<div class="mt-2">
+<h3 class="mb-1 text-primary">Address</h3>
+<textarea id="profile-address" class="w-100 mb-2" style="padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg-card); color: var(--text-main); font-family: inherit; resize: vertical; min-height: 80px;">Jubilee Hills, Hyderabad</textarea>
+</div>
+
+<div class="d-flex gap-2 mt-2" style="flex-wrap: wrap;">
+<button class="btn btn-primary" style="flex: 1; min-width: 150px;" onclick="app.showToast('Profile changes saved successfully!')">Save Changes</button>
+<button class="btn btn-outline text-pink" style="flex: 1; min-width: 150px;" onclick="app.logout()">
+<i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+</button>
+</div>
+</div>
+
+<!-- Below Address Section 1: Discount Coupons -->
+<div style="background: var(--bg-card); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border);">
+<div class="d-flex justify-between align-items-center mb-3">
+<h3 class="text-primary"><i class="fa-solid fa-tags"></i> Discount Coupons</h3>
+<span class="text-sm text-muted">5 Available</span>
+</div>
+<div class="d-flex gap-2" style="flex-wrap: wrap;">
+<div style="flex: 1; min-width: 200px; background: var(--bg-main); padding: 14px; border-radius: 10px; border: 1.5px dashed var(--success);">
+<div class="font-bold text-success">ZOMNEW</div>
+<div class="text-sm">₹75 OFF on orders above ₹199</div>
+<button class="btn btn-text text-sm" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('ZOMNEW'); app.navigate('cart');">Use Coupon</button>
+</div>
+<div style="flex: 1; min-width: 200px; background: var(--bg-main); padding: 14px; border-radius: 10px; border: 1.5px dashed var(--success);">
+<div class="font-bold text-success">50OFF</div>
+<div class="text-sm">Flat 50% OFF up to ₹100</div>
+<button class="btn btn-text text-sm" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('50OFF'); app.navigate('cart');">Use Coupon</button>
+</div>
+<div style="flex: 1; min-width: 200px; background: var(--bg-main); padding: 14px; border-radius: 10px; border: 1.5px dashed var(--success);">
+<div class="font-bold text-success">PARTY150</div>
+<div class="text-sm">₹150 OFF on orders above ₹499</div>
+<button class="btn btn-text text-sm" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('PARTY150'); app.navigate('cart');">Use Coupon</button>
+</div>
+<div style="flex: 1; min-width: 200px; background: var(--bg-main); padding: 14px; border-radius: 8px; border: 1.5px dashed var(--success);">
+<div class="font-bold text-success">TASTY30</div>
+<div class="text-sm">30% OFF up to ₹120</div>
+<button class="btn btn-text text-sm" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('TASTY30'); app.navigate('cart');">Use Coupon</button>
+</div>
+<div style="flex: 1; min-width: 200px; background: var(--bg-main); padding: 14px; border-radius: 8px; border: 1.5px dashed var(--success);">
+<div class="font-bold text-success">FREEDEL</div>
+<div class="text-sm">Free Delivery (₹40 OFF)</div>
+<button class="btn btn-text text-sm" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('FREEDEL'); app.navigate('cart');">Use Coupon</button>
+</div>
+</div>
+</div>
+
+<!-- Below Address Section 2: Order & Payment History -->
+<div style="background: var(--bg-card); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border);">
+<div class="d-flex justify-between align-items-center mb-3">
+<h2><i class="fa-solid fa-credit-card"></i> Order & Payment History</h2>
+<span class="text-sm text-muted">All past transactions</span>
+</div>
+<div id="order-history-container">
+</div>
+</div>
+
+</div>
+</section>
+
+<!-- Improved Real-Time Map Order Tracking Section -->
+<section id="screen-tracking" class="screen hidden">
+<div class="tracking-card">
+<div class="d-flex justify-between align-items-center mb-2">
+<h2>Order Tracking (<span id="track-id">ODR123456</span>)</h2>
+<span class="map-live-badge"><i class="fa-solid fa-circle" style="font-size: 0.6rem; animation: blink 1.5s infinite;"></i> Live GPS</span>
+</div>
+
+<p class="text-success font-medium mb-2">
+Estimated Delivery: <i class="fa-solid fa-motorcycle"></i> Arriving in <span id="eta-mins">25</span> mins 
+(<span id="tracking-distance-text">Calculating route...</span>)
+</p>
+
+<!-- Interactive Live Map Container -->
+<div id="live-tracking-map" class="mt-2 mb-3"></div>
+
+<div class="stepper mt-3">
+<div class="step" id="step-1"><div class="step-icon"><i class="fa-solid fa-receipt"></i></div><p>Placed</p></div>
+<div class="step" id="step-2"><div class="step-icon"><i class="fa-solid fa-fire-burner"></i></div><p>Preparing</p></div>
+<div class="step" id="step-3"><div class="step-icon"><i class="fa-solid fa-user-check"></i></div><p>Assigned</p></div>
+<div class="step" id="step-4"><div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div><p>On The Way</p></div>
+<div class="step" id="step-5"><div class="step-icon"><i class="fa-solid fa-house"></i></div><p>Delivered</p></div>
+</div>
+
+<div class="delivery-agent mt-2">
+<img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Agent">
+<div class="agent-info">
+<h4>Ramesh Kumar</h4>
+<p class="text-sm"><i class="fa-solid fa-star text-warning"></i> 4.8 | <i class="fa-solid fa-motorcycle"></i> AP09 BX 1234</p>
+<p class="text-sm text-primary font-medium" id="tracking-status-badge">Locating nearby delivery partner...</p>
+</div>
+<button class="btn btn-outline ml-auto" onclick="app.showToast('Calling delivery partner Ramesh Kumar...')"><i class="fa-solid fa-phone"></i> Call</button>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Floating AI Chatbot Launcher -->
+<div class="ai-fab" id="ai-chat-btn" onclick="app.toggleAIChat()" title="Ask Zomi AI">
+<div class="ai-fab-pulse"></div>
+<i class="fa-solid fa-robot"></i>
+</div>
+
+<!-- AI Chatbot Window -->
+<div class="ai-chat-window hidden" id="ai-chat-window">
+<div class="ai-chat-header">
+<div class="d-flex gap-1">
+<i class="fa-solid fa-sparkles"></i>
+<div>
+<div class="font-bold text-sm">Zomi AI Assistant</div>
+<div style="font-size: 0.7rem; opacity: 0.9;"><i class="fa-solid fa-circle text-success" style="font-size: 0.55rem;"></i> Always Online</div>
+</div>
+</div>
+<button onclick="app.toggleAIChat()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<div class="ai-chat-body" id="ai-chat-body">
+<div class="ai-chat-msg bot">
+👋 Hi there! I'm <b>Zomi AI</b>, your 24/7 food discovery & customer support assistant. How can I help you today?
+</div>
+</div>
+
+<!-- Quick Suggestion Chips -->
+<div class="ai-quick-chips">
+<div class="ai-chip" onclick="app.handleAIChatPrompt('Show healthy food')">🥗 Healthy Food</div>
+<div class="ai-chip" onclick="app.handleAIChatPrompt('Show menu')">📋 Full Menu</div>
+<div class="ai-chip" onclick="app.handleAIChatPrompt('Where is my order?')">📦 Order Status</div>
+<div class="ai-chip" onclick="app.handleAIChatPrompt('Best discount coupons')">🎟️ Promo Codes</div>
+<div class="ai-chip" onclick="app.handleAIChatPrompt('Need support refund')">💬 Customer Support</div>
+</div>
+
+<div class="ai-chat-footer">
+<input type="text" id="ai-chat-input" placeholder="Ask for food, restaurant menu, or support..." onkeypress="if(event.key==='Enter') app.sendUserMessage()">
+<button class="btn btn-primary" onclick="app.sendUserMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+</div>
+</div>
+
+<!-- Bottom Nav with Filter Option right beside Cart -->
+<nav class="bottom-nav hidden" id="bottom-nav">
+<a href="#" onclick="app.navigate('home')" class="active"><i class="fa-solid fa-house"></i> Home</a>
+<a href="#" onclick="app.navigate('cart')">
+<div class="cart-nav-icon">
+<i class="fa-solid fa-cart-shopping"></i>
+<span class="badge" id="nav-cart-badge">0</span>
+</div>
+Cart
+</a>
+<!-- Filters option right beside Cart -->
+<a href="#" onclick="app.showModal('modal-filters')"><i class="fa-solid fa-sliders"></i> Filters</a>
+<a href="#" onclick="app.showAllFood()"><i class="fa-solid fa-list"></i> All Food</a>
+<a href="#" onclick="app.navigate('profile')"><i class="fa-regular fa-user"></i> Profile</a>
+</nav>
+
+<!-- Filters Dedicated Modal -->
+<div id="modal-filters" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h3><i class="fa-solid fa-sliders text-primary"></i> Filter & Sort Dishes</h3>
+<button onclick="app.closeModal('modal-filters')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<div class="mb-3">
+<label class="font-bold text-sm mb-1 d-flex">Sort By:</label>
+<select id="modal-sort-select" class="w-100">
+<option value="default">Recommended (Default)</option>
+<option value="rating-high">Top Rated (4.5+ first)</option>
+<option value="price-low">Price: Low to High</option>
+<option value="price-high">Price: High to Low</option>
+<option value="time-fast">Fastest Delivery Time</option>
+</select>
+</div>
+
+<div class="mb-3">
+<label class="font-bold text-sm mb-1 d-flex">Dietary Preference:</label>
+<div class="d-flex gap-2">
+<button class="btn btn-outline text-sm w-100" id="filter-btn-all" onclick="app.setFilterDiet('all')">All</button>
+<button class="btn btn-outline text-sm w-100" id="filter-btn-veg" onclick="app.setFilterDiet('veg')"><i class="fa-solid fa-leaf text-success"></i> Veg Only</button>
+</div>
+</div>
+
+<div class="mb-3">
+<label class="font-bold text-sm mb-1 d-flex">Delivery Speed:</label>
+<label class="d-flex align-items-center gap-1 cursor-pointer">
+<input type="checkbox" id="modal-instant-checkbox" style="width: auto; margin-bottom: 0;">
+<span class="text-sm">Instant Delivery Only (&lt; 25 mins)</span>
+</label>
+</div>
+
+<div class="d-flex gap-2 mt-3">
+<button class="btn btn-primary w-100" onclick="app.applyModalFilters()">Apply Filters</button>
+<button class="btn btn-outline w-100" onclick="app.showAllFood(); app.closeModal('modal-filters');">Reset</button>
+</div>
+</div>
+</div>
+
+<div id="modal-notifications" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h3><i class="fa-regular fa-bell text-primary"></i> Notifications</h3>
+<button onclick="app.closeModal('modal-notifications')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div id="notifications-list">
+<div class="notification-item unread">
+<i class="fa-solid fa-tag text-success notification-icon"></i>
+<div>
+<div class="font-bold text-sm">New Coupon Added!</div>
+<div class="text-sm text-muted">Use code PARTY150 to get flat ₹150 OFF on orders above ₹499.</div>
+</div>
+</div>
+<div class="notification-item unread">
+<i class="fa-solid fa-coins text-warning notification-icon"></i>
+<div>
+<div class="font-bold text-sm">50 Coins Earned</div>
+<div class="text-sm text-muted">You received 50 reward coins on your recent delivery!</div>
+</div>
+</div>
+<div class="notification-item">
+<i class="fa-solid fa-users text-primary notification-icon"></i>
+<div>
+<div class="font-bold text-sm">Split Payment Enabled</div>
+<div class="text-sm text-muted">You can now split order payments equally with your friends via UPI.</div>
+</div>
+</div>
+</div>
+<button class="btn btn-outline w-100 mt-2 text-sm" onclick="app.markAllNotificationsRead()">Mark all as read</button>
+</div>
+</div>
+
+<div id="modal-location" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h3>Select Delivery Location</h3>
+<button onclick="app.closeModal('modal-location')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div class="map-placeholder mt-2">
+<iframe id="modal-map-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=78.35,17.35,78.55,17.55&layer=mapnik&marker=17.4399,78.4983" width="100%" height="200" style="border:1px solid var(--border); border-radius:12px;" allowfullscreen="" loading="lazy"></iframe>
+</div>
+<button class="btn btn-outline w-100 mt-2 text-primary" onclick="app.useGPS()">
+<i class="fa-solid fa-crosshairs"></i> Use Current Live GPS Location
+</button>
+<div class="text-center mt-2 mb-2">OR</div>
+<div class="d-flex gap-1">
+<input type="text" id="manual-location" placeholder="Enter location manually..." class="w-100" style="margin-bottom:0;">
+<button class="btn btn-primary" onclick="app.setManualLocation()">Set</button>
+</div>
+</div>
+</div>
+
+<div id="modal-discounts" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h3>Available Discounts</h3>
+<button onclick="app.closeModal('modal-discounts')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<div class="p-3 bg-main border-radius mb-2 border" style="border-radius:10px;">
+<h4 class="text-success">ZOMNEW</h4>
+<p class="text-sm text-muted">Get ₹75 OFF on your order. Minimum cart value ₹199.</p>
+<button class="btn btn-text text-sm font-bold" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('ZOMNEW'); app.closeModal('modal-discounts'); app.navigate('cart');">Apply Now</button>
+</div>
+
+<div class="p-3 bg-main border-radius mb-2 border" style="border-radius:10px;">
+<h4 class="text-success">50OFF</h4>
+<p class="text-sm text-muted">Flat 50% off up to ₹100 on all orders.</p>
+<button class="btn btn-text text-sm font-bold" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('50OFF'); app.closeModal('modal-discounts'); app.navigate('cart');">Apply Now</button>
+</div>
+
+<div class="p-3 bg-main border-radius mb-2 border" style="border-radius:10px;">
+<h4 class="text-success">PARTY150</h4>
+<p class="text-sm text-muted">Flat ₹150 OFF on orders above ₹499.</p>
+<button class="btn btn-text text-sm font-bold" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('PARTY150'); app.closeModal('modal-discounts'); app.navigate('cart');">Apply Now</button>
+</div>
+
+<div class="p-3 bg-main border-radius mb-2 border" style="border-radius:10px;">
+<h4 class="text-success">TASTY30</h4>
+<p class="text-sm text-muted">Get 30% OFF up to ₹120.</p>
+<button class="btn btn-text text-sm font-bold" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('TASTY30'); app.closeModal('modal-discounts'); app.navigate('cart');">Apply Now</button>
+</div>
+
+<div class="p-3 bg-main border-radius border" style="border-radius:10px;">
+<h4 class="text-success">FREEDEL</h4>
+<p class="text-sm text-muted">Enjoy Free Delivery! Flat ₹40 OFF.</p>
+<button class="btn btn-text text-sm font-bold" style="padding:0; margin-top:5px;" onclick="app.setAndApplyCoupon('FREEDEL'); app.closeModal('modal-discounts'); app.navigate('cart');">Apply Now</button>
+</div>
+
+<button class="btn btn-primary w-100 mt-3" onclick="app.closeModal('modal-discounts'); app.navigate('cart');">Go to Cart</button>
+</div>
+</div>
+
+<div id="modal-giftbox" class="modal hidden">
+<div class="modal-content text-center">
+<div class="modal-header">
+<h3>Gift Box Rewards</h3>
+<button onclick="app.closeModal('modal-giftbox')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<i class="fa-solid fa-coins text-warning mt-2" style="font-size: 4rem;"></i>
+<h2 class="mt-2"><span id="coin-balance-display">0</span> Coins</h2>
+<p class="text-muted mt-1 text-sm">You earn 50 coins for every order you complete! Use coins to redeem free food in the future.</p>
+</div>
+</div>
+
+<div id="modal-split" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h3>Split Payment</h3>
+<button onclick="app.closeModal('modal-split')"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<p class="text-sm text-muted mb-2">Request money from friends via UPI. Split your meal bill evenly!</p>
+<label class="font-medium text-sm">Total people (including you):</label>
+<input type="number" id="split-count" min="1" max="10" value="1" oninput="app.generateSplitFields()">
+
+<div id="split-share-preview" class="font-bold text-primary mt-2 text-lg">Your share: ₹0</div>
+
+<div id="split-fields-container" class="mt-2"></div>
+
+<button class="btn btn-primary w-100 mt-3" onclick="app.submitSplitPayment()">Apply Split to Cart</button>
+</div>
+</div>
+
+<div id="modal-secure-pay" class="modal hidden">
+<div class="modal-content text-center">
+<h3 class="mb-2">Secure Payment Verification</h3>
+<p class="text-sm text-muted mb-2">Enter your 4-digit PIN to confirm and place your order.</p>
+<input type="password" id="secure-pin-input" placeholder="1 2 3 4" maxlength="4" style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
+<div class="d-flex gap-1 mt-2">
+<button class="btn btn-primary w-100" onclick="app.confirmOrder()">Confirm</button>
+<button class="btn btn-outline w-100" onclick="app.closeModal('modal-secure-pay')">Cancel</button>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast hidden">Message here</div>
+
+<!-- Leaflet JS for live tracking map & animation -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const state = {
+isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+userLocation: localStorage.getItem('userLocation') || 'Set Location',
+userCoordinates: JSON.parse(localStorage.getItem('userCoordinates')) || { latitude: 17.4399, longitude: 78.4983 },
+cart: JSON.parse(localStorage.getItem('cart')) || [],
+theme: localStorage.getItem('theme') || 'light',
+coins: parseInt(localStorage.getItem('coins')) || 0,
+unreadNotifications: 3,
+orders: JSON.parse(localStorage.getItem('orders')) || [],
+searchQuery: '',
+currentCategory: 'All Food',
+sortBy: 'default',
+isVegOnly: false,
+isInstantOnly: false,
+selectedRestaurantId: null,
+splitCount: 1,
+appliedCoupon: null,
+discountAmount: 0,
+currentOTP: null,
+hasLocation: false,
+leafletMap: null,
+driverMarker: null,
+homeMarker: null,
+routeLine: null,
+trackingTimer: null
+};
+
+const restaurantDatabase = [
+{ id: 101, name: "Domino's Pizza", rating: 4.5, time: "15-25 min", cuisine: "Pizzas, Fast Food, Italian", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80", offer: "50% OFF up to ₹100" },
+{ id: 102, name: "Burger King", rating: 4.2, time: "10-20 min", cuisine: "Burgers, Fast Food, American", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80", offer: "Free Delivery" },
+{ id: 103, name: "Bawarchi Biryani", rating: 4.8, time: "30-40 min", cuisine: "Biryani, North Indian, Mughlai", img: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=400&q=80", offer: "₹75 OFF use ZOMNEW" },
+{ id: 104, name: "The Sushi Bar", rating: 4.7, time: "35-45 min", cuisine: "Japanese, Sushi, Asian", img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=400&q=80", offer: "Buy 1 Get 1 Free" },
+{ id: 105, name: "Wok This Way", rating: 4.4, time: "20-30 min", cuisine: "Chinese, Asian, Noodles", img: "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=400&q=80", offer: "20% OFF" },
+{ id: 106, name: "Taco Fiesta", rating: 4.7, time: "15-25 min", cuisine: "Mexican, Street Food, Tacos", img: "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?auto=format&fit=crop&w=400&q=80", offer: "Free Taco on ₹300+" },
+{ id: 107, name: "Sweet Tooth Cafe", rating: 4.8, time: "10-20 min", cuisine: "Desserts, Bakery, Cakes", img: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=400&q=80", offer: "10% OFF" },
+{ id: 108, name: "Punjabi Dhaba", rating: 4.3, time: "25-35 min", cuisine: "North Indian, Tandoori, Mughlai", img: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?auto=format&fit=crop&w=400&q=80", offer: "Flat ₹50 OFF" },
+{ id: 109, name: "Coastal Cravings", rating: 4.1, time: "30-40 min", cuisine: "Coastal, Seafood, Goan", img: "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?auto=format&fit=crop&w=400&q=80", offer: "Free Dessert" },
+{ id: 112, name: "KFC", rating: 4.3, time: "20-30 min", cuisine: "Fried Chicken, Fast Food, Wings", img: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=400&q=80", offer: "Super Bucket Deals" },
+{ id: 114, name: "Pista House", rating: 4.6, time: "35-45 min", cuisine: "Biryani, Desserts, Haleem", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80", offer: "10% OFF on Haleem" },
+{ id: 118, name: "Rustic Hearth Cafe", rating: 4.8, time: "15-25 min", cuisine: "Continental, Bakery, Coffee", img: "https://images.unsplash.com/photo-1525610553991-2bede1a236e2?auto=format&fit=crop&w=400&q=80", offer: "Buy 1 Get 1" },
+{ id: 119, name: "Le Bistro Continental", rating: 4.9, time: "20-30 min", cuisine: "French, Continental, European", img: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=400&q=80", offer: "Flat 20% OFF" },
+{ id: 120, name: "The Grand Riviera", rating: 4.8, time: "25-35 min", cuisine: "Continental, Italian, Gourmet", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80", offer: "Chef's Special 15% OFF" }
+];
+
+const foodDatabase = [
+/* Domino's Pizza (101) */
+{ id: 1, restaurantId: 101, restaurantName: "Domino's Pizza", name: "Margherita Veg Pizza", category: "Pizza", price: 299, rating: 4.5, time: "15-25 min", veg: true, badge: "Best Seller", desc: "Classic delight with 100% real mozzarella cheese.", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 2, restaurantId: 101, restaurantName: "Domino's Pizza", name: "Chicken Pepperoni", category: "Pizza", price: 449, rating: 4.8, time: "15-25 min", veg: false, badge: "Trending", desc: "Loaded with chicken pepperoni and extra cheese.", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 22, restaurantId: 101, restaurantName: "Domino's Pizza", name: "Farmhouse Pizza", category: "Pizza", price: 399, rating: 4.6, time: "15-25 min", veg: true, badge: "", desc: "Overloaded with crisp capsicum, onion, and tomatoes.", img: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=400&q=80", healthy: true },
+
+/* Burger King (102) */
+{ id: 3, restaurantId: 102, restaurantName: "Burger King", name: "Chicken Burger", category: "Burger", price: 149, rating: 4.2, time: "10-20 min", veg: true, badge: "", desc: "Crispy potato patty with fresh veggies and mayo.", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 21, restaurantId: 102, restaurantName: "Burger King", name: "Double Chicken Burger", category: "Burger", price: 249, rating: 4.6, time: "10-20 min", veg: false, badge: "Must Try", desc: "Double grilled chicken patties with melted cheese.", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 29, restaurantId: 102, restaurantName: "Burger King", name: "Hot & Crispy Chicken", category: "Fast Food", price: 350, rating: 4.4, time: "10-20 min", veg: false, badge: "Bestseller", desc: "Signature hot and crispy fried chicken pieces.", img: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 30, restaurantId: 102, restaurantName: "Burger King", name: "Roasted Chicken Sub", category: "Fast Food", price: 240, rating: 4.4, time: "10-20 min", veg: false, badge: "", desc: "Tender roasted chicken strips packed with fresh veggies.", img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 45, restaurantId: 102, restaurantName: "Burger King", name: "Crispy Veg Whopper", category: "Burger", price: 199, rating: 4.5, time: "10-20 min", veg: true, badge: "Whopper King", desc: "Our signature flame-grilled vegetable whopper with sesame buns.", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Bawarchi Biryani (103) */
+{ id: 4, restaurantId: 103, restaurantName: "Bawarchi Biryani", name: "Hyderabadi Biryani", category: "Biryani", price: 220, rating: 4.3, time: "30-40 min", veg: false, badge: "Hot & Spicy", desc: "Aromatic basmati rice cooked with authentic rich spices.", img: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 46, restaurantId: 103, restaurantName: "Bawarchi Biryani", name: "Special Hyderabadi Chicken Biryani", category: "Biryani", price: 340, rating: 4.9, time: "30-40 min", veg: false, badge: "Iconic", desc: "Authentic dum biryani slow-cooked with tender marinated chicken and saffron rice.", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 47, restaurantId: 103, restaurantName: "Bawarchi Biryani", name: "Dum Biryani", category: "Biryani", price: 280, rating: 4.6, time: "30-40 min", veg: false, badge: "Chef's Special", desc: "Authentic royal dum biryani layered with aromatic basmati rice and rich spices.", img: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 48, restaurantId: 103, restaurantName: "Bawarchi Biryani", name: "Mutton Dum Biryani Family Pack", category: "Biryani", price: 620, rating: 4.8, time: "30-40 min", veg: false, badge: "Must Try", desc: "Rich mutton dum biryani served with spicy Mirchi Ka Salan and creamy Raita.", img: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* The Sushi Bar (104) */
+{ id: 6, restaurantId: 104, restaurantName: "The Sushi Bar", name: "California Sushi Roll", category: "Sushi", price: 450, rating: 4.6, time: "35-45 min", veg: false, badge: "Popular", desc: "Crab meat, avocado, and cucumber wrapped in seaweed.", img: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 18, restaurantId: 104, restaurantName: "The Sushi Bar", name: "Sushi Platter Special", category: "Sushi", price: 699, rating: 4.8, time: "35-45 min", veg: false, badge: "Chef's Choice", desc: "A premium assortment featuring our restaurant's iconic setup.", img: "https://images.unsplash.com/photo-1617196034183-421b4917c92d?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 23, restaurantId: 104, restaurantName: "The Sushi Bar", name: "Spicy Tuna Maki", category: "Sushi", price: 520, rating: 4.8, time: "35-45 min", veg: false, badge: "Chef's Special", desc: "Fresh tuna mixed with spicy mayo and scallions.", img: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 24, restaurantId: 104, restaurantName: "The Sushi Bar", name: "Crispy Veggie Roll", category: "Sushi", price: 380, rating: 4.4, time: "35-45 min", veg: true, badge: "", desc: "Tempura fried vegetables rolled in seasoned rice.", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=400&q=80", healthy: true },
+
+/* Wok This Way (105) */
+{ id: 9, restaurantId: 105, restaurantName: "Wok This Way", name: " Noodles", category: "Chinese", price: 280, rating: 4.5, time: "20-30 min", veg: false, badge: "Spicy", desc: "Crispy chicken tossed in spicy soy-garlic sauce.", img: "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 19, restaurantId: 105, restaurantName: "Wok This Way", name: "Wok Master's Special", category: "Chinese", price: 350, rating: 4.6, time: "20-30 min", veg: false, badge: "Signature", desc: "Our signature Asian bowl inspired by the restaurant's vibe.", img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 49, restaurantId: 105, restaurantName: "Wok This Way", name: "Veg Hakka Chilli Garlic Noodles", category: "Chinese", price: 240, rating: 4.4, time: "20-30 min", veg: true, badge: "Hot & Spicy", desc: "Wok-tossed noodles with shredded bell peppers, cabbage, and roasted garlic.", img: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 50, restaurantId: 105, restaurantName: "Wok This Way", name: "Steamed Dim Sum Dumplings", category: "Chinese", price: 290, rating: 4.7, time: "20-30 min", veg: true, badge: "Bestseller", desc: "Handcrafted Cantonese dumplings filled with exotic mushrooms and water chestnuts.", img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=400&q=80", healthy: true },
+
+/* Taco Fiesta (106) */
+{ id: 11, restaurantId: 106, restaurantName: "Taco Fiesta", name: "Tacos", category: "Mexican", price: 210, rating: 4.8, time: "15-25 min", veg: false, badge: "Best Seller", desc: "Soft shell tacos with marinated grilled chicken.", img: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 13, restaurantId: 106, restaurantName: "Taco Fiesta", name: "Taco Fiesta Fiesta Platter", category: "Mexican", price: 549, rating: 4.9, time: "15-25 min", veg: false, badge: "Zomiggy Exclusive", desc: "A special chef's choice platter using our iconic image.", img: "https://images.unsplash.com/photo-1564758564527-b97d79cb27c1?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 25, restaurantId: 106, restaurantName: "Taco Fiesta", name: "Spicy Chicken Tacos", category: "Mexican", price: 299, rating: 4.5, time: "15-25 min", veg: false, badge: "", desc: "Soft corn tortillas with grilled chicken and fresh salsa.", img: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 26, restaurantId: 106, restaurantName: "Taco Fiesta", name: "Bean & Cheese Burrito", category: "Mexican", price: 250, rating: 4.3, time: "15-25 min", veg: true, badge: "Classic", desc: "Warm flour tortilla filled with refried beans and cheese.", img: "https://images.unsplash.com/photo-1626844131082-256783844137?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 27, restaurantId: 106, restaurantName: "Taco Fiesta", name: "Loaded Cheese Nachos", category: "Mexican", price: 320, rating: 4.7, time: "15-25 min", veg: true, badge: "Shareable", desc: "Crispy tortilla chips smothered in melted queso and jalapeños.", img: "https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Sweet Tooth Cafe (107) */
+{ id: 12, restaurantId: 107, restaurantName: "Sweet Tooth Cafe", name: "Death By Chocolate Cake", category: "Dessert", price: 150, rating: 4.9, time: "10-20 min", veg: true, badge: "Trending", desc: "Decadent chocolate cake with layers of ganache.", img: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 28, restaurantId: 107, restaurantName: "Sweet Tooth Cafe", name: "Blueberry Cheesecake", category: "Dessert", price: 220, rating: 4.8, time: "10-20 min", veg: true, badge: "", desc: "Creamy baked cheesecake topped with fresh blueberry compote.", img: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 51, restaurantId: 107, restaurantName: "Sweet Tooth Cafe", name: "Warm Belgian Choco Waffle", category: "Dessert", price: 180, rating: 4.7, time: "10-20 min", veg: true, badge: "Chef's Pick", desc: "Crispy hot waffle drizzled with melted milk and dark Belgian chocolate.", img: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 52, restaurantId: 107, restaurantName: "Sweet Tooth Cafe", name: "Red Velvet Jar Pastry", category: "Dessert", price: 140, rating: 4.6, time: "10-20 min", veg: true, badge: "Sweet Delight", desc: "Layers of moist red velvet cake with creamy vanilla frosting in a glass jar.", img: "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Punjabi Dhaba (108) */
+{ id: 14, restaurantId: 108, restaurantName: "Punjabi Dhaba", name: "Classic Butter Chicken", category: "North Indian", price: 349, rating: 4.5, time: "25-35 min", veg: false, badge: "Best Seller", desc: "Rich and creamy tomato-based curry with tandoori chicken.", img: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 15, restaurantId: 108, restaurantName: "Punjabi Dhaba", name: "Dal Makhani & Naan", category: "North Indian", price: 269, rating: 4.2, time: "25-35 min", veg: true, badge: "", desc: "Slow-cooked black lentils with butter, served with soft naan.", img: "https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 20, restaurantId: 108, restaurantName: "Punjabi Dhaba", name: "Idelli", category: "North Indian", price: 450, rating: 4.7, time: "25-35 min", veg: true, badge: "Zomiggy Exclusive", desc: "Experience the authentic dhaba feel with this massive thali.", img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 53, restaurantId: 108, restaurantName: "Punjabi Dhaba", name: "Paneer Butter Masala", category: "North Indian", price: 299, rating: 4.6, time: "25-35 min", veg: true, badge: "Popular", desc: "Cottage cheese simmered in a velvet tomato and cashew nut gravy.", img: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Coastal Cravings (109) */
+{ id: 16, restaurantId: 109, restaurantName: "Coastal Cravings", name: "Goan Fish Curry", category: "Coastal", price: 410, rating: 4.4, time: "30-40 min", veg: false, badge: "Must Try", desc: "Tangy and spicy fish curry made with Goan spices.", img: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 54, restaurantId: 109, restaurantName: "Coastal Cravings", name: "Mangalorean Prawn Ghee Roast", category: "Coastal", price: 450, rating: 4.8, time: "30-40 min", veg: false, badge: "Signature Dish", desc: "Succulent prawns pan-roasted in authentic Byadagi chilli masala and desi ghee.", img: "https://images.unsplash.com/photo-1559742811-822873691df8?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 55, restaurantId: 109, restaurantName: "Coastal Cravings", name: "Malabar Fish Fry with Steamed Rice", category: "Coastal", price: 380, rating: 4.5, time: "30-40 min", veg: false, badge: "Coastal Special", desc: "Crispy shallow-fried Kingfish steak coated with spicy coastal dry rub.", img: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&w=400&q=80", healthy: true },
+
+/* KFC (112) */
+{ id: 32, restaurantId: 112, restaurantName: "KFC", name: "Bucket Meal Special", category: "Fast Food", price: 599, rating: 4.4, time: "20-30 min", veg: false, badge: "Bestseller", desc: "Our iconic bucket deal featuring the restaurant's signature look.", img: "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 56, restaurantId: 112, restaurantName: "KFC", name: "Hot Wings (8 Pcs)", category: "Fast Food", price: 299, rating: 4.5, time: "20-30 min", veg: false, badge: "Spicy Crunch", desc: "Tender chicken wings coated with fiery marinade and fried to crunchy perfection.", img: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 57, restaurantId: 112, restaurantName: "KFC", name: "Zinger Burger with Cheese", category: "Burger", price: 219, rating: 4.6, time: "20-30 min", veg: false, badge: "Classic", desc: "Crunchy crispy chicken fillet topped with fresh lettuce, mayo and cheese.", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Pista House (114) */
+{ id: 33, restaurantId: 114, restaurantName: "Pista House", name: "Signature Mutton Biryani", category: "Biryani", price: 380, rating: 4.7, time: "35-45 min", veg: false, badge: "Chef's Special", desc: "Authentic dum biryani presented with the Pista House aesthetic.", img: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 58, restaurantId: 114, restaurantName: "Pista House", name: "World Famous Mutton Haleem", category: "North Indian", price: 290, rating: 4.9, time: "35-45 min", veg: false, badge: "Award Winner", desc: "Slow-cooked meat, wheat grains, and pure ghee spiced with royal aromatic herbs.", img: "https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Rustic Hearth Cafe (118) */
+{ id: 34, restaurantId: 118, restaurantName: "Rustic Hearth Cafe", name: "Grilled Herb Chicken Breast", category: "Continental", price: 390, rating: 4.8, time: "15-25 min", veg: false, badge: "Continental Special", desc: "Juicy grilled chicken breast served with mashed potatoes and sautéed vegetables in rosemary jus.", img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 37, restaurantId: 118, restaurantName: "Rustic Hearth Cafe", name: "Continental Veg Ratatouille", category: "Continental", price: 310, rating: 4.5, time: "15-25 min", veg: true, badge: "Healthy Choice", desc: "Classic French stewed zucchini, eggplant, and bell peppers in fresh thyme-infused tomato coulis.", img: "https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 60, restaurantId: 118, restaurantName: "Rustic Hearth Cafe", name: "Artisanal Hazelnut Cappuccino", category: "Continental", price: 160, rating: 4.8, time: "10-15 min", veg: true, badge: "Cafe Special", desc: "Freshly brewed espresso with steamed frothy milk and roasted hazelnut syrup.", img: "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=400&q=80", healthy: false },
+
+/* Le Bistro Continental (119) */
+{ id: 38, restaurantId: 119, restaurantName: "Le Bistro Continental", name: "Pan-Seared Herb Salmon", category: "Continental", price: 540, rating: 4.9, time: "20-30 min", veg: false, badge: "Chef's Signature", desc: "Norwegian salmon filet seared in garlic butter, served with asparagus and lemon caper drizzle.", img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 39, restaurantId: 119, restaurantName: "Le Bistro Continental", name: "Chicken Cordon Bleu", category: "Continental", price: 460, rating: 4.8, time: "20-30 min", veg: false, badge: "Must Try", desc: "Crispy panko-breaded chicken breast stuffed with smoked ham and melted gruyere cheese.", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 40, restaurantId: 119, restaurantName: "Le Bistro Continental", name: "Herb Crusted Cottage Cheese Steak", category: "Continental", price: 360, rating: 4.7, time: "20-30 min", veg: true, badge: "Zomiggy Exclusive", desc: "Char-grilled paneer steak coated with crushed herbs and paprika, served on a bed of buttered risotto.", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80", healthy: true },
+
+/* The Grand Riviera (120) */
+{ id: 41, restaurantId: 120, restaurantName: "The Grand Riviera", name: "Baked Lasagna Bolognese", category: "Continental", price: 440, rating: 4.8, time: "25-35 min", veg: false, badge: "Classic", desc: "Traditional layered pasta sheets with seasoned minced meat ragu, bechamel sauce and golden mozzarella.", img: "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&w=400&q=80", healthy: false },
+{ id: 42, restaurantId: 120, restaurantName: "The Grand Riviera", name: "Spanish Paella De Valencia", category: "Continental", price: 490, rating: 4.7, time: "25-35 min", veg: false, badge: "Popular", desc: "Saffron infused arborio rice simmered with tender chicken, prawns, bell peppers and sweet green peas.", img: "https://images.unsplash.com/photo-1534080564583-6be75777b70a?auto=format&fit=crop&w=400&q=80", healthy: true },
+{ id: 43, restaurantId: 120, restaurantName: "The Grand Riviera", name: "Stuffed Chicken Breast Florentine", category: "Continental", price: 470, rating: 4.9, time: "25-35 min", veg: false, badge: "Chef's Special", desc: "Tender chicken breasts stuffed with creamed spinach, ricotta and sundried tomatoes.", img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=400&q=80", healthy: true }
+];
+
+const app = {
+init: () => {
+app.applyTheme(state.theme);
+const storedLocation = localStorage.getItem('userLocation');
+const hasStoredLocation = Boolean(storedLocation && storedLocation.trim() && storedLocation !== 'Set Location');
+state.userLocation = storedLocation || 'Set Location';
+state.hasLocation = hasStoredLocation;
+document.getElementById('header-location').innerText = state.userLocation;
+document.getElementById('profile-coins').innerText = state.coins;
+app.updateNotificationBadge();
+
+if (state.isLoggedIn) {
+if (hasStoredLocation) {
+app.navigate('home');
+app.renderRestaurants();
+app.renderFoodCards();
+app.updateCartBadge();
+app.renderPaymentFields();
+app.renderOrderHistory();
+} else {
+app.navigate('location');
+app.showToast('Please select your delivery location');
+}
+} else {
+app.navigate('login');
+}
+
+app.initFilters();
+app.generateSplitFields();
+
+if (state.isLoggedIn && !hasStoredLocation) {
+app.useGPS();
+}
+},
+
+initFilters: () => {
+const searchInput = document.getElementById('main-search-input');
+if (searchInput) {
+searchInput.addEventListener('input', (e) => {
+state.searchQuery = e.target.value.toLowerCase();
+app.renderFoodCards();
+});
+}
+
+const vegToggle = document.getElementById('veg-toggle');
+if (vegToggle) {
+vegToggle.addEventListener('change', (e) => {
+state.isVegOnly = e.target.checked;
+app.renderFoodCards();
+});
+}
+
+const pills = document.querySelectorAll('.filter-pill');
+pills.forEach(pill => {
+pill.addEventListener('click', (e) => {
+pills.forEach(p => p.classList.remove('active'));
+e.currentTarget.classList.add('active');
+
+const chosen = e.currentTarget.innerText.trim();
+state.currentCategory = chosen;
+
+if(chosen === 'All Food') {
+state.selectedRestaurantId = null;
+app.renderRestaurants();
+}
+app.renderFoodCards();
+});
+});
+},
+
+handleSortChange: (val) => {
+state.sortBy = val;
+app.renderFoodCards();
+},
+
+setFilterDiet: (diet) => {
+if(diet === 'veg') {
+state.isVegOnly = true;
+document.getElementById('filter-btn-veg').classList.add('btn-primary');
+document.getElementById('filter-btn-veg').classList.remove('btn-outline');
+document.getElementById('filter-btn-all').classList.remove('btn-primary');
+document.getElementById('filter-btn-all').classList.add('btn-outline');
+} else {
+state.isVegOnly = false;
+document.getElementById('filter-btn-all').classList.add('btn-primary');
+document.getElementById('filter-btn-all').classList.remove('btn-outline');
+document.getElementById('filter-btn-veg').classList.remove('btn-primary');
+document.getElementById('filter-btn-veg').classList.add('btn-outline');
+}
+const vegToggle = document.getElementById('veg-toggle');
+if(vegToggle) vegToggle.checked = state.isVegOnly;
+},
+
+applyModalFilters: () => {
+const sortVal = document.getElementById('modal-sort-select').value;
+state.sortBy = sortVal;
+const mainSortSelect = document.getElementById('sort-select');
+if (mainSortSelect) mainSortSelect.value = sortVal;
+
+const instantChecked = document.getElementById('modal-instant-checkbox').checked;
+state.isInstantOnly = instantChecked;
+const btnInstant = document.getElementById('btn-instant');
+if (btnInstant) {
+if(instantChecked) btnInstant.classList.add('active');
+else btnInstant.classList.remove('active');
+}
+
+app.renderFoodCards();
+app.closeModal('modal-filters');
+app.showToast("Filters applied successfully!");
+},
+
+showAllFood: () => {
+state.currentCategory = 'All Food';
+state.selectedRestaurantId = null;
+state.isVegOnly = false;
+state.isInstantOnly = false;
+state.sortBy = 'default';
+state.searchQuery = '';
+
+const searchInput = document.getElementById('main-search-input');
+if(searchInput) searchInput.value = '';
+
+const vegToggle = document.getElementById('veg-toggle');
+if(vegToggle) vegToggle.checked = false;
+
+const sortSelect = document.getElementById('sort-select');
+if(sortSelect) sortSelect.value = 'default';
+
+const modalSort = document.getElementById('modal-sort-select');
+if(modalSort) modalSort.value = 'default';
+
+const modalInstant = document.getElementById('modal-instant-checkbox');
+if(modalInstant) modalInstant.checked = false;
+
+const btnInstant = document.getElementById('btn-instant');
+if(btnInstant) btnInstant.classList.remove('active');
+
+const pills = document.querySelectorAll('.filter-pill');
+pills.forEach(p => p.classList.remove('active'));
+if(pills[0]) pills[0].classList.add('active');
+
+app.navigate('home');
+app.renderRestaurants();
+app.renderFoodCards();
+app.showToast("Filters reset to default");
+},
+
+clearRestaurantFilter: () => {
+state.selectedRestaurantId = null;
+app.renderRestaurants();
+app.renderFoodCards();
+app.showToast("Showing dishes from all restaurants");
+},
+
+toggleInstant: () => {
+state.isInstantOnly = !state.isInstantOnly;
+const btn = document.getElementById('btn-instant');
+const modalInstant = document.getElementById('modal-instant-checkbox');
+if(state.isInstantOnly) {
+btn.classList.add('active');
+if(modalInstant) modalInstant.checked = true;
+app.showToast("Showing items deliverable under 25 mins");
+} else {
+btn.classList.remove('active');
+if(modalInstant) modalInstant.checked = false;
+}
+app.renderFoodCards();
+},
+
+navigate: (screen) => {
+document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+const target = document.getElementById(`screen-${screen}`);
+if(target) target.classList.remove('hidden');
+
+const header = document.getElementById('main-header');
+const nav = document.getElementById('bottom-nav');
+
+if (screen === 'login') {
+header.classList.add('hidden');
+nav.classList.add('hidden');
+} else {
+header.classList.remove('hidden');
+nav.classList.remove('hidden');
+}
+
+if (screen === 'cart') app.renderCart();
+if (screen === 'profile') app.renderOrderHistory();
+
+document.querySelectorAll('.bottom-nav a').forEach(a => a.classList.remove('active'));
+if (screen === 'home') document.querySelector('.bottom-nav a:nth-child(1)').classList.add('active');
+if (screen === 'cart') document.querySelector('.bottom-nav a:nth-child(2)').classList.add('active');
+if (screen === 'profile') document.querySelector('.bottom-nav a:nth-child(5)').classList.add('active');
+},
+
+showNotifications: () => {
+app.showModal('modal-notifications');
+},
+
+markAllNotificationsRead: () => {
+state.unreadNotifications = 0;
+app.updateNotificationBadge();
+document.querySelectorAll('.notification-item').forEach(item => item.classList.remove('unread'));
+app.showToast("All notifications marked as read");
+},
+
+updateNotificationBadge: () => {
+const badge = document.getElementById('notification-badge');
+if (!badge) return;
+if (state.unreadNotifications > 0) {
+badge.classList.remove('hidden');
+badge.innerText = state.unreadNotifications;
+} else {
+badge.classList.add('hidden');
+}
+},
+
+requestOTP: () => {
+const mobile = document.getElementById('mobile-input').value.trim();
+if (mobile.length !== 10 || isNaN(mobile)) {
+app.showToast("Enter a valid 10-digit number");
+return;
+}
+document.getElementById('login-step-1').classList.add('hidden');
+document.getElementById('login-step-2').classList.remove('hidden');
+document.getElementById('display-mobile').innerText = `+91 ${mobile}`;
+
+const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+state.currentOTP = generatedOtp;
+sessionStorage.setItem('currentOTP', generatedOtp);
+document.getElementById('otp-input').value = '';
+
+let timeLeft = 60;
+const timerEl = document.getElementById('otp-timer');
+const resendBtn = document.getElementById('resend-btn');
+resendBtn.disabled = true;
+
+const timerId = setInterval(() => {
+timeLeft--;
+timerEl.innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+if (timeLeft <= 0) {
+clearInterval(timerId);
+resendBtn.disabled = false;
+}
+}, 1000);
+
+app.showToast(`OTP generated: ${state.currentOTP}`);
+},
+
+verifyOTP: () => {
+const otp = document.getElementById('otp-input').value.trim();
+const expectedOtp = state.currentOTP || sessionStorage.getItem('currentOTP') || '';
+if (otp === expectedOtp) {
+sessionStorage.removeItem('currentOTP');
+localStorage.setItem('isLoggedIn', 'true');
+state.isLoggedIn = true;
+state.hasLocation = false;
+app.navigate('location');
+app.showToast('Please select your delivery location');
+app.useGPS();
+} else {
+app.showToast("Invalid OTP");
+}
+},
+
+logout: () => {
+localStorage.removeItem('isLoggedIn');
+localStorage.removeItem('userLocation');
+localStorage.removeItem('userCoordinates');
+state.isLoggedIn = false;
+state.hasLocation = false;
+state.userLocation = 'Set Location';
+document.getElementById('header-location').innerText = state.userLocation;
+app.navigate('login');
+},
+
+showModal: (id) => {
+if(id === 'modal-giftbox') {
+document.getElementById('coin-balance-display').innerText = state.coins;
+}
+if(id === 'modal-split') {
+document.getElementById('split-count').value = state.splitCount;
+app.generateSplitFields();
+}
+document.getElementById(id).classList.remove('hidden');
+},
+
+closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+
+useGPS: () => {
+if (!navigator.geolocation) {
+app.showToast("Geolocation is not supported by your browser");
+return;
+}
+app.showToast("Fetching live GPS coordinates...");
+navigator.geolocation.getCurrentPosition(async (position) => {
+const { latitude, longitude } = position.coords;
+state.userCoordinates = { latitude, longitude };
+localStorage.setItem('userCoordinates', JSON.stringify({ latitude, longitude }));
+
+try {
+const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`, {
+headers: { 'Accept-Language': 'en' }
+});
+const data = await response.json();
+
+let readableLocation = '';
+if (data && data.address) {
+const addr = data.address;
+const locality = addr.suburb || addr.neighbourhood || addr.residential || addr.road || addr.village || addr.town || addr.city_district;
+const city = addr.city || addr.town || addr.county || addr.state_district || addr.state;
+readableLocation = locality && city ? `${locality}, ${city}` : (data.display_name.split(',').slice(0, 3).join(','));
+} else {
+readableLocation = `Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`;
+}
+
+state.userLocation = readableLocation;
+state.hasLocation = true;
+localStorage.setItem('userLocation', readableLocation);
+
+document.getElementById('header-location').innerText = readableLocation;
+const profileAddress = document.getElementById('profile-address');
+if (profileAddress) profileAddress.value = readableLocation;
+
+app.closeModal('modal-location');
+app.navigate('home');
+app.renderRestaurants();
+app.renderFoodCards();
+app.showToast(`Location set: ${readableLocation}`);
+} catch (error) {
+const fallback = `Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`;
+state.userLocation = fallback;
+state.hasLocation = true;
+localStorage.setItem('userLocation', fallback);
+document.getElementById('header-location').innerText = fallback;
+app.closeModal('modal-location');
+app.navigate('home');
+app.renderRestaurants();
+app.renderFoodCards();
+app.showToast("Real GPS location applied");
+}
+}, (error) => {
+let msg = "Unable to fetch GPS location.";
+if (error.code === error.PERMISSION_DENIED) {
+msg = "Location permission denied. Please enter manually.";
+}
+app.showToast(msg);
+}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+},
+
+setManualLocation: () => {
+const val = document.getElementById('location-manual-input').value.trim() || document.getElementById('manual-location').value.trim();
+if(val) {
+state.userLocation = val;
+state.hasLocation = true;
+localStorage.setItem('userLocation', val);
+document.getElementById('header-location').innerText = val;
+const profileAddress = document.getElementById('profile-address');
+if (profileAddress) profileAddress.value = val;
+
+fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=1`)
+.then(r => r.json())
+.then(data => {
+  if (data && data.length > 0) {
+    state.userCoordinates = { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    localStorage.setItem('userCoordinates', JSON.stringify(state.userCoordinates));
+  }
+}).catch(() => {});
+
+app.closeModal('modal-location');
+app.navigate('home');
+app.renderRestaurants();
+app.renderFoodCards();
+app.showToast(`Location set to: ${val}`);
+} else {
+app.showToast("Please type a valid location");
+}
+},
+
+generateSplitFields: () => {
+const count = parseInt(document.getElementById('split-count').value) || 1;
+const container = document.getElementById('split-fields-container');
+container.innerHTML = '';
+
+const friendsToCharge = count - 1;
+
+for(let i=0; i<friendsToCharge; i++) {
+container.innerHTML += `
+<div class="mt-1">
+<label class="text-sm font-medium">Friend ${i+1} UPI ID:</label>
+<input type="text" placeholder="e.g. friend${i+1}@okaxis" class="w-100 mt-1">
+</div>
+`;
+}
+
+const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+const effectiveTotal = Math.max(0, subtotal - state.discountAmount);
+const share = count > 0 ? (effectiveTotal / count).toFixed(2) : effectiveTotal.toFixed(2);
+document.getElementById('split-share-preview').innerText = `Your share: ₹${share} (Total ₹${effectiveTotal})`;
+},
+
+submitSplitPayment: () => {
+const count = parseInt(document.getElementById('split-count').value) || 1;
+state.splitCount = count;
+app.renderCart();
+app.showToast(`Split enabled! Total is divided among ${count} person(s).`);
+app.closeModal('modal-split');
+},
+
+renderPaymentFields: () => {
+const method = document.getElementById('payment-select').value;
+const container = document.getElementById('dynamic-payment-fields');
+
+if (method === 'credit' || method === 'debit') {
+container.innerHTML = `
+<input type="text" placeholder="16-digit Card Number" maxlength="16" class="w-100 mb-1">
+<div class="d-flex gap-1 mb-1">
+<input type="text" placeholder="MM/YY" maxlength="5" class="w-100">
+<input type="password" placeholder="CVV" maxlength="3" class="w-100">
+</div>
+`;
+} else if (method === 'upi') {
+container.innerHTML = `<p class="text-sm text-muted">You will be securely redirected to your UPI app for payment confirmation.</p>`;
+} else {
+container.innerHTML = `<p class="text-sm text-muted">Pay with cash or scan QR on delivery.</p>`;
+}
+},
+
+applyTheme: (theme) => {
+if (theme === 'dark') document.body.classList.add('dark-mode');
+else document.body.classList.remove('dark-mode');
+},
+
+renderRestaurants: () => {
+const container = document.getElementById('restaurant-grid');
+const clearBtn = document.getElementById('clear-res-filter-btn');
+
+if (clearBtn) {
+if (state.selectedRestaurantId) clearBtn.classList.remove('hidden');
+else clearBtn.classList.add('hidden');
+}
+
+container.innerHTML = restaurantDatabase.map(res => {
+const isSelected = state.selectedRestaurantId === res.id ? 'active' : '';
+return `
+<div class="restaurant-card ${isSelected}" onclick="app.filterByRestaurant(${res.id})">
+<div class="res-img-container">
+<img src="${res.img}" alt="${res.name}" loading="lazy">
+<span class="res-offer">${res.offer}</span>
+${isSelected ? '<span class="res-selected-badge"><i class="fa-solid fa-check"></i> Menu Open</span>' : ''}
+</div>
+<div class="res-content">
+<div class="res-name">${res.name}</div>
+<div class="res-cuisine">${res.cuisine}</div>
+<div class="food-meta" style="margin-bottom:0;">
+<span><i class="fa-solid fa-star text-warning"></i> ${res.rating}</span>
+<span>${res.time}</span>
+</div>
+</div>
+</div>
+`;
+}).join('');
+},
+
+filterByRestaurant: (resId) => {
+if (state.selectedRestaurantId === resId) {
+state.selectedRestaurantId = null;
+app.showToast("Showing all restaurant menus");
+} else {
+state.selectedRestaurantId = resId;
+const targetRes = restaurantDatabase.find(r => r.id === resId);
+app.showToast(`Displaying full menu for ${targetRes.name}`);
+}
+app.renderRestaurants();
+app.renderFoodCards();
+
+const dishesSection = document.getElementById('food-section-title');
+if (dishesSection) {
+dishesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+},
+
+renderFoodCards: () => {
+const grid = document.getElementById('food-grid');
+const dynamicTitle = document.getElementById('food-section-title');
+let filteredFoods = [...foodDatabase];
+
+if (state.selectedRestaurantId) {
+const targetRes = restaurantDatabase.find(r => r.id === state.selectedRestaurantId);
+dynamicTitle.innerHTML = `Menu: <span class="text-primary">${targetRes ? targetRes.name : 'Restaurant'}</span> <span class="text-sm text-muted font-medium">(${targetRes ? targetRes.cuisine : ''})</span>`;
+filteredFoods = filteredFoods.filter(f => f.restaurantId === state.selectedRestaurantId);
+} else {
+dynamicTitle.innerText = state.currentCategory === 'All Food' ? "Popular Dishes" : `${state.currentCategory} Dishes`;
+}
+
+if (state.isInstantOnly) {
+filteredFoods = filteredFoods.filter(f => f.time === "10-20 min" || f.time === "15-25 min");
+}
+
+if (state.isVegOnly) {
+filteredFoods = filteredFoods.filter(f => f.veg);
+}
+
+if (!state.selectedRestaurantId && state.currentCategory !== 'All Food') {
+filteredFoods = filteredFoods.filter(f => f.category.toLowerCase() === state.currentCategory.toLowerCase());
+}
+
+if (state.searchQuery) {
+filteredFoods = filteredFoods.filter(f =>
+f.name.toLowerCase().includes(state.searchQuery) ||
+f.category.toLowerCase().includes(state.searchQuery) ||
+f.restaurantName.toLowerCase().includes(state.searchQuery)
+);
+}
+
+if (state.sortBy === 'rating-high') {
+filteredFoods.sort((a, b) => b.rating - a.rating);
+} else if (state.sortBy === 'price-low') {
+filteredFoods.sort((a, b) => a.price - b.price);
+} else if (state.sortBy === 'price-high') {
+filteredFoods.sort((a, b) => b.price - a.price);
+} else if (state.sortBy === 'time-fast') {
+const parseTime = (tStr) => parseInt(tStr.split('-')[0]) || 99;
+filteredFoods.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+}
+
+if (filteredFoods.length === 0) {
+grid.innerHTML = `
+<div class="w-100 text-center mt-4 p-3" style="grid-column: 1/-1;">
+<i class="fa-solid fa-utensils text-muted" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+<p class="text-muted">No dishes match your specific filters.</p>
+<button class="btn btn-outline mt-2 btn-sm" onclick="app.showAllFood()">Reset All Filters</button>
+</div>`;
+return;
+}
+
+grid.innerHTML = filteredFoods.map(item => {
+const inCartItem = state.cart.find(c => c.id === item.id);
+const qty = inCartItem ? inCartItem.qty : 0;
+
+return `
+<div class="food-card">
+<div class="food-img-container">
+${item.badge ? `<span class="card-badge">${item.badge}</span>` : ''}
+<button class="fav-btn" onclick="this.style.color = this.style.color === 'red' ? 'var(--text-muted)' : 'red'"><i class="fa-solid fa-heart"></i></button>
+<img src="${item.img}" alt="${item.name}" loading="lazy">
+</div>
+<div class="card-content">
+<div class="food-title">
+<span>${item.name}</span>
+<div class="${item.veg ? 'veg-indicator' : 'veg-indicator non-veg-indicator'}"></div>
+</div>
+<span class="food-restaurant-origin" onclick="app.filterByRestaurant(${item.restaurantId})"><i class="fa-solid fa-shop"></i> ${item.restaurantName}</span>
+<div class="food-meta">
+<span><i class="fa-solid fa-star text-warning"></i> ${item.rating}</span>
+<span>${item.time}</span>
+</div>
+<p class="food-desc">${item.desc}</p>
+<div class="card-footer">
+<span class="price">₹${item.price}</span>
+${qty > 0 ? `
+<div class="card-qty-control">
+<button onclick="app.updateQty(${item.id}, -1)">-</button>
+<span>${qty}</span>
+<button onclick="app.updateQty(${item.id}, 1)">+</button>
+</div>
+` : `
+<button class="add-btn" onclick="app.addToCart(${item.id})">ADD</button>
+`}
+</div>
+</div>
+</div>
+`;
+}).join('');
+},
+
+addToCart: (id) => {
+const item = foodDatabase.find(f => f.id === id);
+const existing = state.cart.find(c => c.id === id);
+if(existing) existing.qty += 1;
+else state.cart.push({ ...item, qty: 1 });
+
+app.saveCart();
+app.renderFoodCards();
+app.showToast(`${item.name} added to cart`);
+},
+
+updateQty: (id, change) => {
+const item = state.cart.find(c => c.id === id);
+if(item) {
+item.qty += change;
+if(item.qty <= 0) state.cart = state.cart.filter(c => c.id !== id);
+app.saveCart();
+app.recalculateDiscount();
+app.renderFoodCards();
+app.renderCart();
+}
+},
+
+saveCart: () => {
+localStorage.setItem('cart', JSON.stringify(state.cart));
+app.updateCartBadge();
+},
+
+updateCartBadge: () => {
+const count = state.cart.reduce((sum, item) => sum + item.qty, 0);
+const navBadge = document.getElementById('nav-cart-badge');
+const headerBadge = document.getElementById('header-cart-badge');
+if (navBadge) navBadge.innerText = count;
+if (headerBadge) headerBadge.innerText = count;
+},
+
+recalculateDiscount: () => {
+const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+if (!state.appliedCoupon || subtotal === 0) {
+state.discountAmount = 0;
+return;
+}
+
+if (state.appliedCoupon === 'ZOMNEW') {
+if (subtotal >= 199) {
+state.discountAmount = 75;
+} else {
+state.discountAmount = 0;
+state.appliedCoupon = null;
+app.showToast("ZOMNEW removed: Minimum order value ₹199 required.");
+}
+} else if (state.appliedCoupon === '50OFF') {
+state.discountAmount = Math.min(Math.round(subtotal * 0.5), 100);
+} else if (state.appliedCoupon === 'PARTY150') {
+if (subtotal >= 499) {
+state.discountAmount = 150;
+} else {
+state.discountAmount = 0;
+state.appliedCoupon = null;
+app.showToast("PARTY150 removed: Minimum order value ₹499 required.");
+}
+} else if (state.appliedCoupon === 'TASTY30') {
+state.discountAmount = Math.min(Math.round(subtotal * 0.3), 120);
+} else if (state.appliedCoupon === 'FREEDEL') {
+state.discountAmount = 40;
+}
+},
+
+setAndApplyCoupon: (code) => {
+const input = document.getElementById('coupon-input');
+if(input) input.value = code;
+app.applyCouponWithCode(code);
+},
+
+applyCoupon: () => {
+const couponCode = document.getElementById('coupon-input').value.trim().toUpperCase();
+app.applyCouponWithCode(couponCode);
+},
+
+applyCouponWithCode: (couponCode) => {
+const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+if (subtotal === 0) {
+app.showToast("Cart is empty! Add items first.");
+return;
+}
+
+if (couponCode === 'ZOMNEW') {
+if (subtotal < 199) {
+app.showToast("ZOMNEW requires a minimum order value of ₹199");
+return;
+}
+state.appliedCoupon = 'ZOMNEW';
+state.discountAmount = 75;
+app.showToast("Coupon ZOMNEW applied: ₹75 OFF!");
+} else if (couponCode === '50OFF') {
+state.appliedCoupon = '50OFF';
+state.discountAmount = Math.min(Math.round(subtotal * 0.5), 100);
+app.showToast(`Coupon 50OFF applied: Flat 50% (₹${state.discountAmount} OFF)!`);
+} else if (couponCode === 'PARTY150') {
+if (subtotal < 499) {
+app.showToast("PARTY150 requires a minimum order value of ₹499");
+return;
+}
+state.appliedCoupon = 'PARTY150';
+state.discountAmount = 150;
+app.showToast("Coupon PARTY150 applied: ₹150 OFF!");
+} else if (couponCode === 'TASTY30') {
+state.appliedCoupon = 'TASTY30';
+state.discountAmount = Math.min(Math.round(subtotal * 0.3), 120);
+app.showToast(`Coupon TASTY30 applied: 30% (₹${state.discountAmount} OFF)!`);
+} else if (couponCode === 'FREEDEL') {
+state.appliedCoupon = 'FREEDEL';
+state.discountAmount = 40;
+app.showToast("Coupon FREEDEL applied: Free Delivery (₹40 OFF)!");
+} else {
+app.showToast("Invalid coupon code.");
+return;
+}
+
+app.renderCart();
+},
+
+removeCoupon: () => {
+state.appliedCoupon = null;
+state.discountAmount = 0;
+document.getElementById('coupon-input').value = '';
+app.renderCart();
+app.showToast("Coupon removed");
+},
+
+renderCart: () => {
+const container = document.getElementById('cart-items-container');
+const subtotalEl = document.getElementById('cart-subtotal-price');
+const discountRow = document.getElementById('cart-discount-row');
+const discountEl = document.getElementById('cart-discount-price');
+const totalEl = document.getElementById('cart-total-price');
+const couponMsg = document.getElementById('coupon-status-msg');
+const removeCouponBtn = document.getElementById('btn-remove-coupon');
+
+if(state.cart.length === 0) {
+container.innerHTML = `<p class="text-center mt-4 text-muted">Your cart is empty.</p>`;
+if(subtotalEl) subtotalEl.innerText = "₹0";
+if(discountRow) discountRow.classList.add('hidden');
+if(totalEl) totalEl.innerText = "₹0";
+if(couponMsg) couponMsg.innerHTML = '';
+if(removeCouponBtn) removeCouponBtn.classList.add('hidden');
+return;
+}
+
+app.recalculateDiscount();
+
+let subtotal = 0;
+container.innerHTML = state.cart.map(item => {
+subtotal += item.price * item.qty;
+return `
+<div class="cart-item">
+<div>
+<div class="font-medium">${item.name}</div>
+<div class="text-sm text-muted">₹${item.price} x ${item.qty} = ₹${item.price * item.qty}</div>
+</div>
+<div class="qty-control">
+<button onclick="app.updateQty(${item.id}, -1)">-</button>
+<span>${item.qty}</span>
+<button onclick="app.updateQty(${item.id}, 1)">+</button>
+</div>
+</div>
+`}).join('');
+
+subtotalEl.innerText = `₹${subtotal}`;
+
+const finalTotal = Math.max(0, subtotal - state.discountAmount);
+
+if (state.appliedCoupon && state.discountAmount > 0) {
+discountRow.classList.remove('hidden');
+discountEl.innerText = `-₹${state.discountAmount}`;
+couponMsg.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check"></i> Applied ${state.appliedCoupon} (Saved ₹${state.discountAmount})</span>`;
+removeCouponBtn.classList.remove('hidden');
+} else {
+discountRow.classList.add('hidden');
+couponMsg.innerHTML = '';
+removeCouponBtn.classList.add('hidden');
+}
+
+if (state.splitCount > 1) {
+const splitShare = (finalTotal / state.splitCount).toFixed(2);
+totalEl.innerHTML = `
+<span class="text-sm text-muted" style="text-decoration:line-through; font-weight:normal; margin-right: 5px;">₹${finalTotal}</span>
+₹${splitShare} <span class="text-sm text-primary">(1/${state.splitCount} Share)</span>
+`;
+} else {
+totalEl.innerText = `₹${finalTotal}`;
+}
+},
+
+confirmOrder: () => {
+if(state.cart.length === 0) {
+app.showToast("Cart is empty");
+return;
+}
+
+app.closeModal('modal-secure-pay');
+
+state.coins += 50;
+localStorage.setItem('coins', state.coins);
+document.getElementById('profile-coins').innerText = state.coins;
+
+const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+const effectiveTotal = Math.max(0, subtotal - state.discountAmount);
+const sharePaid = state.splitCount > 1 ? (effectiveTotal / state.splitCount).toFixed(2) : effectiveTotal;
+
+const paymentSelect = document.getElementById('payment-select');
+const paymentMethodName = paymentSelect.options[paymentSelect.selectedIndex].text;
+
+const newOrderId = `ODR${Math.floor(Math.random() * 900000) + 100000}`;
+const orderSummaryText = state.cart.map(i => `${i.name} x${i.qty}`).join(', ');
+
+const newOrderRecord = {
+id: newOrderId,
+date: new Date().toLocaleString(),
+items: orderSummaryText,
+method: paymentMethodName + (state.splitCount > 1 ? ` (Split ${state.splitCount} ways)` : ''),
+total: sharePaid,
+status: 'Processing'
+};
+
+state.orders.unshift(newOrderRecord);
+localStorage.setItem('orders', JSON.stringify(state.orders));
+
+state.unreadNotifications += 1;
+app.updateNotificationBadge();
+
+const notificationsList = document.getElementById('notifications-list');
+if (notificationsList) {
+const newNotif = document.createElement('div');
+newNotif.className = 'notification-item unread';
+newNotif.innerHTML = `
+<i class="fa-solid fa-bag-shopping text-primary notification-icon"></i>
+<div>
+<div class="font-bold text-sm">Order Placed (${newOrderId})</div>
+<div class="text-sm text-muted">Your order for ${orderSummaryText} has been received!</div>
+</div>
+`;
+notificationsList.prepend(newNotif);
+}
+
+state.cart = [];
+state.splitCount = 1;
+state.appliedCoupon = null;
+state.discountAmount = 0;
+app.saveCart();
+app.renderFoodCards();
+
+app.navigate('tracking');
+document.getElementById('track-id').innerText = newOrderId;
+app.showToast("Order placed successfully! Live delivery tracking initiated.");
+
+setTimeout(() => {
+  app.initLiveTrackingMap();
+}, 250);
+},
+
+renderOrderHistory: () => {
+const container = document.getElementById('order-history-container');
+if (!container) return;
+
+if (state.orders.length === 0) {
+container.innerHTML = `<p class="text-muted text-center mt-3">No past orders yet.</p>`;
+return;
+}
+
+container.innerHTML = state.orders.map(order => `
+<div style="background: var(--bg-main); padding: 15px; border-radius: var(--radius); margin-bottom: 15px; border: 1px solid var(--border);">
+<div class="d-flex justify-between w-100 mb-1">
+<span class="font-bold text-lg">${order.id}</span>
+<span class="text-sm text-success"><i class="fa-solid fa-circle-check"></i> ${order.status}</span>
+</div>
+<div class="text-sm text-muted mb-1"><i class="fa-regular fa-clock"></i> ${order.date}</div>
+<div class="text-sm font-medium mb-1"><i class="fa-solid fa-bag-shopping text-primary"></i> ${order.items}</div>
+<div class="text-sm text-muted mb-2"><i class="fa-solid fa-receipt"></i> Method: <b>${order.method}</b></div>
+<div class="font-bold text-lg text-primary">Total Paid: ₹${order.total}</div>
+</div>
+`).join('');
+},
+
+/* Real Interactive OpenStreetMap Tracking Engine with Dynamic Route Dispatch Lifecycle */
+initLiveTrackingMap: () => {
+if (state.trackingTimer) clearInterval(state.trackingTimer);
+
+const homeLat = state.userCoordinates ? state.userCoordinates.latitude : 17.4399;
+const homeLng = state.userCoordinates ? state.userCoordinates.longitude : 78.4983;
+
+if (state.leafletMap) {
+  state.leafletMap.remove();
+  state.leafletMap = null;
+}
+
+state.leafletMap = L.map('live-tracking-map').setView([homeLat, homeLng], 14);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 18
+}).addTo(state.leafletMap);
+
+const homeIcon = L.divIcon({
+  className: 'custom-map-marker',
+  html: `<div style="background: #10b981; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 2.5px solid white;"><i class="fa-solid fa-house" style="font-size: 15px;"></i></div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18]
+});
+
+const resIcon = L.divIcon({
+  className: 'custom-map-marker',
+  html: `<div style="background: #ff385c; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 2.5px solid white;"><i class="fa-solid fa-utensils" style="font-size: 15px;"></i></div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18]
+});
+
+const bikeIcon = L.divIcon({
+  className: 'custom-map-marker',
+  html: `<div style="background: #0284c7; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(2, 132, 199, 0.9); border: 2.5px solid white;"><i class="fa-solid fa-motorcycle" style="font-size: 16px;"></i></div>`,
+  iconSize: [38, 38],
+  iconAnchor: [19, 19]
+});
+
+const originLat = homeLat + 0.0125;
+const originLng = homeLng - 0.0110;
+
+L.marker([originLat, originLng], { icon: resIcon }).addTo(state.leafletMap).bindPopup("<b>Restaurant Kitchen</b><br>Order preparation hub");
+state.homeMarker = L.marker([homeLat, homeLng], { icon: homeIcon }).addTo(state.leafletMap).bindPopup(`<b>Your Home Address</b><br>${state.userLocation}`);
+
+const stepEls = [
+  document.getElementById('step-1'),
+  document.getElementById('step-2'),
+  document.getElementById('step-3'),
+  document.getElementById('step-4'),
+  document.getElementById('step-5')
+];
+
+stepEls.forEach(el => el.classList.remove('active'));
+stepEls[0].classList.add('active');
+
+const statusBadge = document.getElementById('tracking-status-badge');
+const distanceText = document.getElementById('tracking-distance-text');
+const etaMinsText = document.getElementById('eta-mins');
+
+distanceText.innerText = "1.8 km route";
+etaMinsText.innerText = "25";
+statusBadge.innerText = "Order placed! Kitchen is preparing your delicious meal...";
+
+setTimeout(() => {
+  stepEls[1].classList.add('active');
+  statusBadge.innerText = "Chef is cooking your fresh order...";
+  app.showToast("Restaurant confirmed: Food is being prepared!");
+}, 2500);
+
+setTimeout(() => {
+  stepEls[2].classList.add('active');
+  statusBadge.innerText = "Ramesh Kumar assigned! Collecting food parcel from restaurant...";
+  app.showToast("Delivery Partner Assigned: Ramesh Kumar is at the restaurant!");
+  
+  state.driverMarker = L.marker([originLat, originLng], { icon: bikeIcon }).addTo(state.leafletMap).bindPopup("<b>Ramesh Kumar</b><br>Assigned delivery agent");
+
+  state.routeLine = L.polyline([[originLat, originLng], [homeLat, homeLng]], {
+    color: '#ff385c',
+    weight: 4,
+    opacity: 0.85,
+    dashArray: '8, 8'
+  }).addTo(state.leafletMap);
+
+  state.leafletMap.fitBounds([[originLat, originLng], [homeLat, homeLng]], { padding: [45, 45] });
+
+  setTimeout(() => {
+    stepEls[3].classList.add('active');
+    statusBadge.innerText = "Ramesh Kumar picked up order! On the way to your home...";
+    app.showToast("Order dispatched! Delivery partner is heading to your doorstep.");
+
+    const totalSteps = 24;
+    let currentStep = 0;
+
+    state.trackingTimer = setInterval(() => {
+      currentStep++;
+      const ratio = currentStep / totalSteps;
+
+      const currentLat = originLat + (homeLat - originLat) * ratio;
+      const currentLng = originLng + (homeLng - originLng) * ratio;
+
+      state.driverMarker.setLatLng([currentLat, currentLng]);
+
+      const remainingDistKm = Math.max(0, (1.8 * (1 - ratio))).toFixed(1);
+      const remainingMins = Math.max(0, Math.round(20 * (1 - ratio)));
+
+      distanceText.innerText = `${remainingDistKm} km away`;
+      etaMinsText.innerText = remainingMins;
+      statusBadge.innerText = `Ramesh is driving on your route (${remainingDistKm} km away from your home)`;
+
+      if (currentStep >= totalSteps) {
+        clearInterval(state.trackingTimer);
+        stepEls[4].classList.add('active');
+        state.driverMarker.setLatLng([homeLat, homeLng]);
+        distanceText.innerText = "Arrived at destination";
+        etaMinsText.innerText = "0";
+        statusBadge.innerHTML = `<span class="text-success font-bold"><i class="fa-solid fa-circle-check"></i> Order Delivered to Your Doorstep!</span>`;
+        app.showToast("Ding-dong! Your food has successfully arrived at your home location!");
+      }
+    }, 1100);
+
+  }, 2500);
+
+}, 5000);
+},
+
+/* AI Chatbot Logic & Customer Support Intelligence */
+toggleAIChat: () => {
+const win = document.getElementById('ai-chat-window');
+if (win.classList.contains('hidden')) {
+win.classList.remove('hidden');
+} else {
+win.classList.add('hidden');
+}
+},
+
+sendUserMessage: () => {
+const input = document.getElementById('ai-chat-input');
+const query = input.value.trim();
+if (!query) return;
+input.value = '';
+app.handleAIChatPrompt(query);
+},
+
+handleAIChatPrompt: (promptText) => {
+const chatBody = document.getElementById('ai-chat-body');
+
+// Render User Message
+const userMsgDiv = document.createElement('div');
+userMsgDiv.className = 'ai-chat-msg user';
+userMsgDiv.innerText = promptText;
+chatBody.appendChild(userMsgDiv);
+chatBody.scrollTop = chatBody.scrollHeight;
+
+// Generate AI Response
+setTimeout(() => {
+const botMsgDiv = document.createElement('div');
+botMsgDiv.className = 'ai-chat-msg bot';
+
+const q = promptText.toLowerCase().trim();
+
+// 1. Greetings Handler
+if (q === 'hi' || q === 'hello' || q === 'hey' || q.startsWith('hi ') || q.startsWith('hello ') || q === 'hai') {
+  botMsgDiv.innerHTML = `
+    Hello! 👋 How can I help you today?
+    <br><br>You can ask me to:
+    <br>• Show <b>Healthy Food</b> options 🥗
+    <br>• Explore our <b>Restaurant Menus</b> 📋
+    <br>• Check your <b>Order Status</b> 📦
+    <br>• Provide <b>Discount Coupons</b> 🎟️
+    <br>• Search any <b>Restaurant Menu</b> (e.g. <i>"Domino's"</i>, <i>"Bawarchi"</i>)
+  `;
+} 
+// 2. Healthy Food Handler
+else if (q.includes('healthy') || q.includes('diet') || q.includes('fitness') || q.includes('nutritious') || q.includes('low calorie') || q.includes('protein')) {
+  const healthyDishes = foodDatabase.filter(f => f.healthy);
+  botMsgDiv.innerHTML = `
+    <b>🥗 Recommended Healthy & Nutritious Dishes:</b>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Crafted for clean eating and high nutrition:</div>
+    ${healthyDishes.slice(0, 5).map(d => `
+      <div class="ai-dish-card">
+        <img src="${d.img}" alt="${d.name}">
+        <div style="flex: 1;">
+          <div class="font-bold text-sm">${d.name}</div>
+          <div class="text-sm text-primary font-bold">₹${d.price} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">• ${d.restaurantName}</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;" onclick="app.addToCart(${d.id})">+ ADD</button>
+      </div>
+    `).join('')}
+  `;
+} 
+// 3. Specific Restaurant Match Handler (e.g. typing Domino's, Burger King, Bawarchi, etc.)
+else if (restaurantDatabase.some(r => q.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(q))) {
+  const matchedRes = restaurantDatabase.find(r => q.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(q));
+  const resDishes = foodDatabase.filter(f => f.restaurantId === matchedRes.id);
+
+  botMsgDiv.innerHTML = `
+    🍽️ <b>Menu for ${matchedRes.name}:</b>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">${matchedRes.cuisine} • <i class="fa-solid fa-star text-warning"></i> ${matchedRes.rating}</div>
+    ${resDishes.map(d => `
+      <div class="ai-dish-card">
+        <img src="${d.img}" alt="${d.name}">
+        <div style="flex: 1;">
+          <div class="font-bold text-sm">${d.name}</div>
+          <div class="text-sm text-primary font-bold">₹${d.price} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">• ${d.veg ? '🟢 Veg' : '🔴 Non-Veg'}</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;" onclick="app.addToCart(${d.id})">+ ADD</button>
+      </div>
+    `).join('')}
+    <button class="btn btn-outline btn-sm w-100 mt-2" onclick="app.filterByRestaurant(${matchedRes.id}); app.toggleAIChat();">Open Full Menu On Screen</button>
+  `;
+}
+// 4. General Menu Handler
+else if (q === 'menu' || q.includes('show menu') || q.includes('menu list') || q.includes('food menu') || q.includes('view menu') || q.includes('full menu')) {
+  botMsgDiv.innerHTML = `
+    📋 <b>Zomiggy Restaurant Menus & Cuisines:</b>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">Tap any restaurant or cuisine to view dishes:</div>
+    <div class="d-flex gap-1" style="flex-wrap: wrap; margin-bottom: 8px;">
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('Domino\'s Pizza')">Domino's Pizza</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('Burger King')">Burger King</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('Bawarchi Biryani')">Bawarchi Biryani</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('Le Bistro Continental')">Le Bistro Continental</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('The Grand Riviera')">The Grand Riviera</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('The Sushi Bar')">The Sushi Bar</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('KFC')">KFC</span>
+      <span class="ai-chip" onclick="app.handleAIChatPrompt('Pista House')">Pista House</span>
+    </div>
+    <button class="btn btn-primary btn-sm w-100" onclick="app.showAllFood(); app.toggleAIChat();">Browse All Dishes on Home</button>
+  `;
+}
+// 5. Order Status Handler
+else if (q.includes('order') || q.includes('status') || q.includes('track') || q.includes('where')) {
+  if (state.orders && state.orders.length > 0) {
+    const latestOrder = state.orders[0];
+    botMsgDiv.innerHTML = `
+      📦 <b>Your Latest Order Details:</b><br>
+      <b>Order ID:</b> ${latestOrder.id}<br>
+      <b>Items:</b> ${latestOrder.items}<br>
+      <b>Status:</b> <span class="text-success font-bold">${latestOrder.status}</span><br>
+      <b>Payment:</b> ${latestOrder.method}<br>
+      <b>Delivery Partner:</b> Ramesh Kumar (🛵 AP09 BX 1234)<br>
+      <button class="btn btn-primary btn-sm mt-2 w-100" onclick="app.navigate('tracking'); app.toggleAIChat();">Track on Live GPS Map</button>
+    `;
+  } else {
+    botMsgDiv.innerHTML = `
+      ℹ️ <b>You have not ordered anything yet!</b><br>
+      Your active order list is currently empty. Explore our delicious food items or check the menu to place your first order.
+      <button class="btn btn-primary btn-sm mt-2 w-100" onclick="app.showAllFood(); app.toggleAIChat();">Explore Menu & Order Now</button>
+    `;
+  }
+}
+// 6. Coupons & Discounts Handler
+else if (q.includes('coupon') || q.includes('discount') || q.includes('offer') || q.includes('promo') || q.includes('code')) {
+  botMsgDiv.innerHTML = `
+    🎟️ <b>Active Promo Codes for You:</b><br>
+    • <b>ZOMNEW</b> - ₹75 OFF on min ₹199<br>
+    • <b>50OFF</b> - Flat 50% OFF up to ₹100<br>
+    • <b>PARTY150</b> - ₹150 OFF on orders above ₹499<br>
+    • <b>TASTY30</b> - 30% OFF up to ₹120<br>
+    • <b>FREEDEL</b> - Free Delivery (₹40 OFF)<br>
+    <button class="btn btn-outline btn-sm mt-1 w-100" onclick="app.navigate('cart'); app.toggleAIChat();">Go to Cart & Apply</button>
+  `;
+} 
+// 7. Support & Resolution Handler
+else if (q.includes('support') || q.includes('refund') || q.includes('help') || q.includes('issue') || q.includes('complaint') || q.includes('cancel')) {
+  botMsgDiv.innerHTML = `
+    💬 <b>Zomiggy Customer Resolution:</b><br>
+    • <b>Refund Queries:</b> Refunds for cancelled orders are credited back within 15 minutes to your original payment method.<br>
+    • <b>Food Quality / Missing Item:</b> We issue instant credits to your wallet.<br>
+    • <b>Direct Escalation:</b> Our executive support team is notified at <code>support@zomiggy.com</code>.<br>
+    <button class="btn btn-outline btn-sm mt-2 w-100" onclick="app.showToast('Connecting to Senior Support Executive...');"><i class="fa-solid fa-headset"></i> Connect Live Agent</button>
+  `;
+} 
+// 8. General Food Item Matching
+else {
+  const matches = foodDatabase.filter(f => 
+    f.name.toLowerCase().includes(q) || 
+    f.category.toLowerCase().includes(q) || 
+    f.restaurantName.toLowerCase().includes(q)
+  );
+
+  if (matches.length > 0) {
+    botMsgDiv.innerHTML = `
+      🍽️ <b>Found ${matches.length} item(s) for "${promptText}":</b>
+      ${matches.slice(0, 4).map(d => `
+        <div class="ai-dish-card">
+          <img src="${d.img}" alt="${d.name}">
+          <div style="flex: 1;">
+            <div class="font-bold text-sm">${d.name}</div>
+            <div class="text-sm text-primary font-bold">₹${d.price} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">• ${d.restaurantName}</span></div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;" onclick="app.addToCart(${d.id})">+ ADD</button>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    botMsgDiv.innerHTML = `
+      Hello! I'm here to help you search food items, find healthy meals, view menus, track your orders, or solve support queries.
+      <br><br>Try asking:
+      <br>• <i>"Show healthy food"</i>
+      <br>• <i>"Show menu"</i>
+      <br>• <i>"Domino's Pizza"</i> or <i>"Bawarchi Biryani"</i>
+      <br>• <i>"Where is my order?"</i>
+    `;
+  }
+}
+
+chatBody.appendChild(botMsgDiv);
+chatBody.scrollTop = chatBody.scrollHeight;
+}, 350);
+},
+
+showToast: (msg) => {
+const t = document.getElementById('toast');
+t.innerText = msg;
+t.classList.remove('hidden');
+setTimeout(() => t.classList.add('hidden'), 3000);
+}
+};
+
+document.addEventListener('DOMContentLoaded', app.init);
+</script>
+</body>
+</html>

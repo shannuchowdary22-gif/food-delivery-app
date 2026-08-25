@@ -1,0 +1,25 @@
+.otp-input {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background: #fff !important;
+  opacity: 1;
+}
+
+.otp-input::placeholder {
+  color: #64748b;
+  -webkit-text-fill-color: #64748b;
+  opacity: 1;
+}
+
+.development-otp {
+  color: #111827;
+  background: #fff1f4;
+  border: 1px solid rgba(255, 56, 92, .3);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.timer.expired {
+  color: #dc2626;
+}

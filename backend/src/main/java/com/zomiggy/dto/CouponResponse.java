@@ -1,0 +1,1 @@
+package com.zomiggy.dto; public record CouponResponse(String code,String description){}

@@ -1,0 +1,1 @@
+package com.zomiggy.repository; import com.zomiggy.entity.Order; import org.springframework.data.jpa.repository.*; import java.util.*; public interface OrderRepository extends JpaRepository<Order,String>{List<Order> findByUserIdOrderByCreatedAtDesc(Long userId); Optional<Order> findByIdAndUserId(String id,Long userId);}

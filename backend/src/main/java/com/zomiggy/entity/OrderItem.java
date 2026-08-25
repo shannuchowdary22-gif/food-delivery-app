@@ -1,0 +1,3 @@
+package com.zomiggy.entity;
+import jakarta.persistence.*;
+@Entity public class OrderItem { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private Long id; @ManyToOne(optional=false,fetch=FetchType.EAGER) private Order order; @ManyToOne(optional=false,fetch=FetchType.EAGER) private Dish dish; private int quantity; private int unitPrice; protected OrderItem(){} public OrderItem(Dish dish,int quantity){this.dish=dish;this.quantity=quantity;this.unitPrice=dish.getPrice();} void setOrder(Order o){order=o;} public Dish getDish(){return dish;} public int getQuantity(){return quantity;} public int getUnitPrice(){return unitPrice;} }

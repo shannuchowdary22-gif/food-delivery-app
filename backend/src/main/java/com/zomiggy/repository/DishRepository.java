@@ -1,0 +1,1 @@
+package com.zomiggy.repository; import com.zomiggy.entity.Dish; import org.springframework.data.jpa.repository.*; import java.util.*; public interface DishRepository extends JpaRepository<Dish,Long>{List<Dish> findByRestaurantId(Long id);}

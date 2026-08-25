@@ -1,0 +1,1 @@
+package com.zomiggy.repository; import com.zomiggy.entity.OtpCode; import org.springframework.data.jpa.repository.*; import java.util.Optional; public interface OtpCodeRepository extends JpaRepository<OtpCode,Long>{Optional<OtpCode> findTopByMobileOrderByIdDesc(String mobile);}
