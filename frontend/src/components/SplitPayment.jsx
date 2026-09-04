@@ -34,7 +34,7 @@ export default function SplitPayment({ checkout, onClose, onCancel = onClose, on
       setSession(result); setPeople(result.numberOfParticipants); setUpis(result.participants.map((participant, index) => participant.upiId || upis[index] || '')); setPins(result.participants.map((_, index) => pins[index] || ''))
       setParticipantErrors(result.participants.map(() => ''))
       localStorage.setItem('zomiggySplitPaymentId', result.splitPaymentId)
-    } catch (err) { if (!session) setSession(previewSession(checkout.total, participantCount)); if (couponAction) setCouponError(err.response?.data?.message || (err.message === 'Network Error' ? 'Unable to connect to payment service.' : 'Unable to apply coupon. Please try again.')); else setError(err.message === 'Network Error' ? 'Unable to connect to payment service.' : (err.response?.data?.message || err.message || 'Could not start split payment')) } finally { setBusy(false) }
+    } catch (err) { if (!session) setSession(previewSession(checkout.total, participantCount)); const userMessage = err.userMessage || err.response?.data?.message || err.message || 'Could not start split payment'; if (couponAction) setCouponError(userMessage || 'Unable to apply coupon. Please try again.'); else setError(userMessage) } finally { setBusy(false) }
   }
   useEffect(() => { load() }, [])
   const changePeople = (value) => {
@@ -55,7 +55,7 @@ export default function SplitPayment({ checkout, onClose, onCancel = onClose, on
       setSession(result); setParticipantErrors(result.participants.map(() => ''))
       setUpis(result.participants.map((item) => item.upiId || '')); setPins(result.participants.map(() => ''))
       if (result.status === 'PAID') { onComplete({ ...result, couponCode: coupon || null }); toast('All split payments completed') }
-    } catch (err) { setParticipantErrors((values) => values.map((value, current) => current === index ? (err.response?.data?.message || 'Payment failed. Please retry.') : value)) } finally { setBusy(false) }
+    } catch (err) { const userMessage = err.userMessage || err.response?.data?.message || 'Payment failed. Please retry.'; setParticipantErrors((values) => values.map((value, current) => current === index ? userMessage : value)) } finally { setBusy(false) }
   }
   const cancel = () => { localStorage.removeItem('zomiggySplitPaymentId'); onCancel(); onClose() }
   const applyCoupon = () => { localStorage.removeItem('zomiggySplitPaymentId'); load(people, coupon, true) }

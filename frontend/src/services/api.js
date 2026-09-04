@@ -1,6 +1,38 @@
 import axios from 'axios'
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api', timeout: 10000 })
+const resolveApiBaseUrl = () => {
+  const configuredUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
+  if (configuredUrl) return configuredUrl.replace(/\/+$/, '')
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:8080/api'
+    return `${window.location.origin.replace(/\/+$/, '')}/api`
+  }
+
+  return 'http://localhost:8080/api'
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
+
+export const getWebSocketUrl = () => {
+  const origin = API_BASE_URL.replace(/\/api\/?$/, '')
+  if (!origin) return `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:8080/ws`
+  return `${origin.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')}/ws`
+}
+
+export const describeApiError = (error) => {
+  const backendMessage = error?.response?.data?.message || error?.response?.data?.error || error?.response?.data?.details
+  if (error?.code === 'ERR_NETWORK') return 'Unable to reach the backend API. Check the Render backend URL, CORS settings, and server status.'
+  if (error?.response?.status === 400) return backendMessage || 'Invalid request payload.'
+  if (error?.response?.status === 401) return 'Your session expired. Please log in again.'
+  if (error?.response?.status === 403) return 'You are not allowed to perform this action.'
+  if (error?.response?.status === 404) return 'The requested backend endpoint is unavailable.'
+  if (error?.response?.status >= 500) return backendMessage || 'The backend encountered an error. Please try again.'
+  return backendMessage || error?.message || 'Request failed.'
+}
+
+export const api = axios.create({ baseURL: API_BASE_URL, timeout: 15000 })
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('zomiggyToken')
   if (token?.trim()) config.headers.Authorization = `Bearer ${token.trim()}`
@@ -14,13 +46,13 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use((response) => response, (error) => {
-  console.error('API response failed', { method: error.config?.method?.toUpperCase(), url: `${error.config?.baseURL || ''}${error.config?.url || ''}`, status: error.response?.status, response: error.response?.data })
+  console.error('API response failed', { method: error.config?.method?.toUpperCase(), url: `${error.config?.baseURL || ''}${error.config?.url || ''}`, status: error.response?.status, response: error.response?.data, code: error.code })
   if ([401, 403].includes(error.response?.status) && !error.config?.url?.includes('/auth/')) {
     localStorage.removeItem('zomiggyToken')
     localStorage.removeItem('isLoggedIn')
     window.dispatchEvent(new Event('zomiggy-auth-expired'))
   }
-  return Promise.reject(error)
+  return Promise.reject(Object.assign(error, { userMessage: describeApiError(error) }))
 })
 
 export const authService = {
